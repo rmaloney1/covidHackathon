@@ -1,6 +1,7 @@
 import os
 from urllib.parse import urlparse
-from peewee import *  # pylint: disable=unused-wildcard-import
+from peewee import Model, IntegrityError, PostgresqlDatabase, SqliteDatabase  # pylint: disable=unused-wildcard-import
+from peewee import DateField, BooleanField, CharField, IntegerField, ForeignKeyField
 from playhouse.shortcuts import model_to_dict
 from playhouse.hybrid import hybrid_property
 import datetime as dt
@@ -56,12 +57,14 @@ class CompanyBuildings(Base):
 
 class Person(Base):
     personID = CharField(primary_key=True)
+    email = CharField()
 
     @classmethod
-    def createPerson(cls, personID):
+    def createPerson(cls, personID, email):
         try:
             newPerson = cls.create(
                 personID=personID,
+                email=email
             )
 
             return newPerson
@@ -109,6 +112,8 @@ class Project(Base):
 class JiraTicket(Base):
     ticketID = CharField(primary_key=True)
     projectID = ForeignKeyField(Project, backref="tickets")
+    name = CharField()
+    assigned = BooleanField()
 
     @classmethod
     def createTicket(cls, ticketID, projectID):
@@ -136,7 +141,7 @@ class JiraTicket(Base):
         queryObj = jiraQuery(auth, self.projectID.domain, path)
         response = queryObj.send()
         data = json.loads(response.text)["watchers"]
-        #print(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+        print(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
         return [{k:i[k] for k in ["accountId", "displayName", "avatarUrls"]} for i in data]
 
 class PersonTickets(Base):
@@ -148,7 +153,7 @@ class PersonTickets(Base):
         try:
             newAllocation = cls.create(
                 ticketID = ticketID,
-                person = person
+       =         person = person
             )
 
             return newAllocation
@@ -164,7 +169,7 @@ class MeetingRequest(Base):
     dateAllocated = DateField(null=True)
 
     @classmethod
-    def makeRequest(cls, ticketID,afterDate,  dueDate, priority):
+    def makeRequest(cls, ticketID, afterDate,  dueDate, priority):
         try:
             newAllocation = cls.create(
                 ticketID = ticketID,
