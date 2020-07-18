@@ -1,6 +1,11 @@
+import faker from "faker";
+
 export default function Cal(props) {
   return (
-    <table className="table is-bordered is-fullwidth">
+    <table
+      className="table is-bordered is-fullwidth"
+      style={{ tableLayout: "fixed" }}
+    >
       <thead>
         <tr>
           <th>Name</th>
@@ -14,7 +19,13 @@ export default function Cal(props) {
       <tbody>
         {props.people.map((person, idx) => (
           <tr key={idx}>
-            <td>{person.name}</td>
+            <td style={{ textAlign: "center" }}>
+              <img
+                style={{ borderRadius: 100, height: "32px" }}
+                src={faker.image.avatar()}
+              />
+              <p>{person.name}</p>
+            </td>
             <td>{person.days.includes("monday") ? "in office" : "out"}</td>
             <td>{person.days.includes("tuesday") ? "in office" : "out"}</td>
             <td>{person.days.includes("wednesday") ? "in office" : "out"}</td>
