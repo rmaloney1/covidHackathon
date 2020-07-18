@@ -10,7 +10,7 @@ function Bar(props) {
   return (
     <>
       <div className={bar} onClick={() => setShowModal(true)}>
-        {props.tasks.length} meetings
+        {props.tasks.length} meeting{props.tasks.length == 1 ? "" : "s"}
       </div>
       {showModal ? (
         <div className="modal is-active">
@@ -21,7 +21,8 @@ function Bar(props) {
           <div className="modal-content">
             <div className="box has-text-centered">
               <h3 className="title is-3">
-                {props.tasks.length} meetings on [DATE]
+                {props.tasks.length} meeting{props.tasks.length == 1 ? "" : "s"}{" "}
+                on [DATE]
               </h3>
               {props.tasks.map((t, idx) => (
                 <div className="box" key={idx}>
