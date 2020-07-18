@@ -193,6 +193,22 @@ class PersonTickets(Base):
         except IntegrityError:
             raise ValueError(f"Ticket Assign Already Exists")
 
+class PersonProjects(Base):
+    projectID = ForeignKeyField(Project, backref="allocations")
+    person = ForeignKeyField(Person, backref="projects")
+    
+    @classmethod
+    def assignProjects(cls, projectID, person):
+        try:
+            newAllocation = cls.create(
+                projectID = projectID,
+                person = person
+            )
+
+            return newAllocation
+        except IntegrityError:
+            raise ValueError(f"Project Assign Already Exists")
+
 
 # def dbWipe():
 #     modelList = [AllocatedRoom, Student, Room, Floor, SystemInformation]
