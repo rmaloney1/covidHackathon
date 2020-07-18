@@ -2,15 +2,25 @@ import Link from "next/link";
 
 import { nav } from "./Nav.module.scss";
 
+import { useEffect, useContext } from "react";
+import UserContext from "../../context/auth";
+
 export default function Nav() {
-  const user = false;
+  // const [user, setUser] = useContext(UserContext);
+
+  const user = { name: "Tom Hill" };
+
+  // const user = { name: "Tom Hill", id: 1 };
+  // useEffect(() => {
+  //   setUser({ name: "Tom Hill", id: 1 });
+  // }, []);
 
   return (
     <>
       <nav className={`${nav} navbar is-fixed-top`}>
         <div className="navbar-brand">
           <div className="navbar-item">
-            <Link href="/">
+            <Link href={user ? "/calendar" : "/"}>
               <h1 className="title is-2">COVIDSpace</h1>
             </Link>
           </div>
@@ -29,7 +39,7 @@ export default function Nav() {
         </div>
         <div className="navbar-menu">
           <div className="navbar-end">
-            {user ? (
+            {!user ? (
               <div className="navbar-item">
                 <div className="buttons">
                   <a className="button is-primary">
