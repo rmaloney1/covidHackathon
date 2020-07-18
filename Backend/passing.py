@@ -2,7 +2,7 @@ from flask import Flask, request
 from flask_restful import Resource, Api, abort
 import json
 from models import CompanyBuildings, Person, Project, JiraTicket, PersonTickets, MeetingRequest, model_to_dict
-
+from processing import contactTrace
 
 
 app = Flask(__name__)
@@ -55,9 +55,14 @@ class calendar(Resource):
 
         pass
 
+class trace(Resource):
+    def get(self, p_id):
+        return contactTrace(p_id)
+
 api.add_resource(user, '/user')
 api.add_resource(tasks, '/tasks')
 api.add_resource(calendar, '/calendar')
+api.add_resource(trace, '/trace/<string:p_id>')
 
 if __name__ == '__main__':
     app.run(debug = True)
