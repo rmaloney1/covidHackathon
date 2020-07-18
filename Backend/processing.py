@@ -9,7 +9,8 @@ SECRUTIY_BUFFER = 3
 UNSAFEDAYS = 14
 
 
-def createSortedTaskList(requestList):
+def createSortedTaskList(priorityList = True):
+    activeList = MeetingRequest.select().where(MeetingRequest.priority == priorityList & MeetingRequest.requestFilled == False & MeetingRequest.beforeDate >= dt.date.today())
     requestList = []
     scoreList = []
     personCount = []
@@ -43,10 +44,8 @@ def makeAllocations():
             request.elevatePriority()
     
     # get a list of active tasks with high priority (after start date), sorted refering to end date
-    activeList = MeetingRequest.select().where(MeetingRequest.priority == True & MeetingRequest.requestFilled == False & MeetingRequest.beforeDate >= dt.date.today())
-
     # for each task calculate a score
-    sortedList = createSortedTaskList(activeList)
+    sortedList = createSortedTaskList(True)
 
     #fill in tasks refering to priority up to the person count maximum
     capacity = CompanyBuildings.get().personCapacity
@@ -68,15 +67,13 @@ def makeAllocations():
 
     
     #if all high priority filled and still space, fill through low priority using same method
-    lowPriorityActiveList = MeetingRequest.select().where(MeetingRequest.priority == False & MeetingRequest.requestFilled == False & MeetingRequest.beforeDate >= dt.date.today())
-
     # for each task calculate a score
-    lowPrioritySortedList = createSortedTaskList(lowPriorityActiveList)
+    lowPrioritySortedList = createSortedTaskList(False)
     i = 0
-    while currentAllocatedPersonCount <= capacity or i < len(lowPriorityActiveList["requests"]):
-        if ((capacity - currentAllocatedPersonCount) >= lowPriorityActiveList["personCount"][i]):
-            lowPriorityActiveList["requests"][i].allocatedDate = allocationDate
-            currentAllocatedPersonCount += lowPriorityActiveList["personCount"][i]
+    while currentAllocatedPersonCount <= capacity or i < len(lowPrioritySortedList["requests"]):
+        if ((capacity - currentAllocatedPersonCount) >= lowPrioritySortedList["personCount"][i]):
+            lowPrioritySortedList["requests"][i].allocatedDate = allocationDate
+            currentAllocatedPersonCount += lowPrioritySortedList["personCount"][i]
 
         i += 1
 
@@ -88,7 +85,7 @@ def contactTrace(p_id):
     contacted = [] 
 
     #join personTickets to Requests as PersonTicketRequests 
-    PersonMeetingRequest = (MeetingRequest.select().join(PersonTickets).where(PersonTickets.person=p_id)) 
+    PersonMeetingRequest = (MeetingRequest.select().join(PersonTickets).where(PersonTickets.person==p_id)) 
     #for p_id in personTicketRequests 
     for pmr in PersonMeetingRequest.iterator(): 
         #if dateallocated in last 2 weeks 
@@ -98,7 +95,7 @@ def contactTrace(p_id):
                 tickets.append(pmr.ticketID)
             
     for t_id in tickets:
-        ticketRequest = (PersonMeetingRequest.select().where(PersonMeetingRequest.ticketID=t_id))
+        ticketRequest = (PersonMeetingRequest.select().where(PersonMeetingRequest.ticketID==t_id))
         for person in ticketRequest.iterator():
             if person.person not in contacted:
                 contacted.append(person.person) 
