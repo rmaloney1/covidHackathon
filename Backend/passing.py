@@ -52,12 +52,36 @@ class tasks(Resource):
             verbose.append(details)
 
         return verbose
+    
+    def post(self):
+        # name and email
+        data = request.json
+        ticketID = data["ticketID"]
+        afterDate = data["afterDate"]
+        dueDate = data["dueDate"]
+        priority = data["priority"]
+
+        MeetingRequest.makeRequest(ticketID, afterDate,  dueDate, priority)
+        return {}
 
 class calendar(Resource):
     def get(self):
-        # all people and bookings
+        output = []
+        # A list of all people that have a allocated task
+        fullPersonTaskList = PersonTickets.select().join(MeetingRequest).where(MeetingRequest.requestFilled == True)
+        for personTask in fullPersonTaskList.iterator():
+            found = False
+            taskSummary = {"name":personTask.ticketID.name,"attendees": [t for t in PersonTickets.select().where(PersonTickets.person == personTask.person)], "day": (personTask.dateAllocated).strftime("%m/%d/%Y")}
+            for i in output:
+                if output[i]["Name"] == personTask.person:
+                    found = True
+                    output[i]["meetings"].append(taskSummary)
+            
+            if not found:
+                output.append({"Name":personTask.person, "meetings":[taskSummary]})
+        return output
 
-        pass
+
 
 class trace(Resource):
     def get(self, p_id):
