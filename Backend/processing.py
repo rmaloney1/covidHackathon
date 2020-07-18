@@ -64,7 +64,7 @@ def makeAllocations():
     i = 0    
     while currentAllocatedPersonCount <= capacity and i < len(sortedList["requests"]):
         if (capacity - currentAllocatedPersonCount) >= sortedList["personCount"][i]:
-            sortedList["requests"][i].allocatedDate = allocationDate
+            sortedList["requests"][i].allocateDate(allocationDate)
             currentAllocatedPersonCount += sortedList["personCount"][i]
 
         i += 1
@@ -74,7 +74,7 @@ def makeAllocations():
     i = 0
     while currentAllocatedPersonCount <= capacity and i < len(lowPrioritySortedList["requests"]):
         if ((capacity - currentAllocatedPersonCount) >= lowPrioritySortedList["personCount"][i]):
-            lowPrioritySortedList["requests"][i].allocatedDate = allocationDate
+            lowPrioritySortedList["requests"][i].allocateDate(allocationDate)
             currentAllocatedPersonCount += lowPrioritySortedList["personCount"][i]
 
         i += 1

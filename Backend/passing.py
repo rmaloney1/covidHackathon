@@ -72,6 +72,10 @@ class tasks(Resource):
         afterDate = data["afterDate"]
         dueDate = data["dueDate"]
         priority = data["priority"]
+        if priority == "high":
+            priority = True
+        else:
+            priority = False
 
         MeetingRequest.makeRequest(ticketID, afterDate, dueDate, priority)
         return {}
