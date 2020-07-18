@@ -1,6 +1,7 @@
 import os
 from urllib.parse import urlparse
-from peewee import *  # pylint: disable=unused-wildcard-import
+from peewee import Model, IntegrityError, PostgresqlDatabase, SqliteDatabase  # pylint: disable=unused-wildcard-import
+from peewee import DateField, BooleanField, CharField, IntegerField, ForeignKeyField
 from playhouse.shortcuts import model_to_dict
 import datetime as dt
 import json
@@ -55,12 +56,14 @@ class CompanyBuildings(Base):
 
 class Person(Base):
     personID = CharField(primary_key=True)
+    email = CharField()
 
     @classmethod
-    def createPerson(cls, personID):
+    def createPerson(cls, personID, email):
         try:
             newPerson = cls.create(
                 personID=personID,
+                email=email
             )
 
             return newPerson
@@ -127,7 +130,7 @@ class JiraTicket(Base):
         queryObj = jiraQuery(auth, self.projectID.domain, path)
         response = queryObj.send()
         data = json.loads(response.text)["watchers"]
-        #print(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+        print(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
         return [{k:i[k] for k in ["accountId", "displayName", "avatarUrls"]} for i in data]
 
 class PersonTickets(Base):
