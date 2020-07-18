@@ -1,3 +1,10 @@
+@import "../../styles/vars.scss";
+
 .nav {
-  // background-color: red;
+  background: linear-gradient(to right, $purple, #9518c6);
+  h1 {
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+  }
 }
