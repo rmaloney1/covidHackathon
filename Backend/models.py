@@ -31,7 +31,23 @@ class Base(Model):
 
 # Stores all offices (can be multiple buildings)
 class CompanyBuildings(Base):
-    pass
+    @classmethod
+    def createRoom(cls, roomNum, bathroom, front, balc, rf, SubDivisionNumber):
+        try:
+            floorNum = math.floor(roomNum / 100)
+            newRoom = cls.create(
+                roomNumber=roomNum,
+                bathroom=bathroom,
+                front=front,
+                balc=balc,
+                rf=rf,
+                SubDivisionNumber=SubDivisionNumber,
+                floor=floorNum,
+            )
+
+            return newRoom
+        except IntegrityError as e:
+            raise ValueError(f"Room Already Exists {roomNum} : {e}")
 
 # stores all desk-spaces and conference rooms
 class Office(Base):
@@ -62,3 +78,14 @@ class AllocatedDesk(Base):
 
 class PersonTickets(Base):
     pass
+
+# def dbWipe():
+#     modelList = [AllocatedRoom, Student, Room, Floor, SystemInformation]
+#     for model in modelList:
+#         model.delete().execute() # pylint: disable=no-value-for-parameter
+
+# def db_reset():
+#     db.connect()
+#     # db.drop_tables([Student, Floor, Room, AllocatedRoom, SystemInformation])
+#     db.create_tables([Student, Floor, Room, AllocatedRoom, SystemInformation], safe=True)
+#     db.close()
