@@ -67,11 +67,20 @@ export default function Cal(props) {
             </td>
             {["monday", "tuesday", "wednesday", "thursday", "friday"].map(
               (day, idx) => (
-                <td key={idx}>
-                  {person.meetings.filter((m) => m.day == day).length > 0 ? (
-                    <Bar tasks={person.meetings.filter((m) => m.day == day)} />
-                  ) : null}
-                </td>
+                <>
+                  {person.meetings != null ? (
+                    <td key={idx}>
+                      {person.meetings.filter((m) => m.day == day).length >
+                      0 ? (
+                        <Bar
+                          tasks={person.meetings.filter((m) => m.day == day)}
+                        />
+                      ) : null}
+                    </td>
+                  ) : (
+                    <td></td>
+                  )}
+                </>
               )
             )}
           </tr>

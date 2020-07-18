@@ -15,6 +15,7 @@ const API = {
   getTasks: () => api.get("/tasks"),
   doTaskInPerson: (id, afterDate, dueDate, priority) =>
     api.post(`/tasks`, { ticketID: id, afterDate, dueDate, priority }),
+  getCalendar: () => api.get("/calendar"),
 };
 
 export default API;

@@ -1,7 +1,8 @@
 import Cal from "../components/Cal/Cal";
 
-import { useContext } from "react";
+import { useContext, useState, useEffect } from "react";
 import UserContext from "../context/auth";
+import API from "../lib/api/api";
 
 export default function Calendar() {
   // const [user, setUser] = useContext(UserContext);
@@ -14,7 +15,7 @@ export default function Calendar() {
   //   { name: "Tom Wright", days: ["monday", "friday", "tuesday"] },
   // ];
 
-  const peeps = [
+  const peepsStart = [
     {
       name: "Tom Shortay",
       meetings: [
@@ -48,6 +49,19 @@ export default function Calendar() {
       ],
     },
   ];
+
+  const [peeps, setPeeps] = useState(peepsStart);
+
+  useEffect(() => {
+    API.getCalendar()
+      .then((res) => {
+        console.log(res);
+        setPeeps(res.data);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }, []);
 
   return (
     <>
