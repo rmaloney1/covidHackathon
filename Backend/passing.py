@@ -30,8 +30,6 @@ class user(Resource):
 
 class login(Resource):
     def get(self):
-        # receive email
-        shelf = get_db()
 
         # if the email does not exist in the data store, return a 404 error
         if not (identifier in shelf):
