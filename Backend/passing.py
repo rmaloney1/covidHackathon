@@ -24,11 +24,12 @@ class user(Resource):
     def get(self):
         print("hi")
         email = request.args["email"]
-        person = Person.select().where(Person.email==email).get()
-        if not person:
+        try:
+            person = Person.select().where(Person.email==email).get()
+        except:
             return abort(404)
 
-        return {person.personID, email}
+        return {"name" : person.personID, "email" : email}
         
 
 
