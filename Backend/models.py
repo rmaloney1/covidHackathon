@@ -296,11 +296,6 @@ except Exception as e:
     pass
 
 if __name__ == "__main__":
-<<<<<<< HEAD
-    db_reset()
-=======
-
->>>>>>> 836d56d90c5bad4f84809818331328cc56a9032c
     me = apiUser("rohanmaloney@outlook.com", "lxZVdyemldyTFkmwM5Hn94BD")
     auth = me.getAuth()
 
