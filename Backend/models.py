@@ -72,7 +72,7 @@ class Person(Base):
     
     @property
     def activeTicketCount(self):
-        return (Person.join(PersonTickets).select()
+        return (Person.select().join(PersonTickets)
         .where(PersonTickets.ticketID.requestFilled == False)
         .count())
 
@@ -105,8 +105,19 @@ class Project(Base):
         lis = [x["key"] for x in json.loads(response.text)["issues"]]
         return lis
     
-    def getTickets(self, auth):
-        return [JiraTicket(key, self.projectID) for key in self.getTicketKeys(auth)]
+    def refreshTickets(self, auth):
+        print("refreshing tickets")
+        for key in self.getTicketKeys(auth):
+            try:
+                newTicket = JiraTicket.createTicket(key, self.projectID, "", False)
+            except ValueError as e:
+                print("error is ", e)
+                print('done')
+                newTicket = JiraTicket.select().where(JiraTicket.ticketID==key).get()
+            except Exception as e:
+                print("what the fuck was this")
+                print(e)
+            newTicket.setDeets(auth)
 
 class JiraTicket(Base):
     ticketID = CharField(primary_key=True)
@@ -115,11 +126,13 @@ class JiraTicket(Base):
     assigned = BooleanField()
 
     @classmethod
-    def createTicket(cls, ticketID, projectID):
+    def createTicket(cls, ticketID, projectID, name, assigned):
         try:
             newTicket = cls.create(
                 ticketID = ticketID,
                 projectID = projectID,
+                name = name,
+                assinged = assigned
             )
 
             return newTicket
@@ -133,7 +146,7 @@ class JiraTicket(Base):
         }
         queryObj = jiraQuery(auth, self.projectID.domain, path, query=query)
         response = queryObj.send()
-        return json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": "))
+        return json.loads(response.text)
     
     def getWatchers(self, auth):
         path = f"/rest/api/3/issue/{self.ticketID}/watchers"
@@ -142,6 +155,18 @@ class JiraTicket(Base):
         data = json.loads(response.text)["watchers"]
         print(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
         return [{k:i[k] for k in ["accountId", "displayName", "avatarUrls"]} for i in data]
+    
+    def setDeets(self, auth):
+        fields = ['summary']
+        data = self.getFields(fields, auth)["fields"]
+        self.name = data["summary"]
+        self.save()
+        print("setting name of", self.ticketID, "to", self.name)
+    
+
+    # def genAttendees(self, auth):
+    #     for person in self.getWatchers(auth):
+    #         if Person.get()
 
 class PersonTickets(Base):
     ticketID = ForeignKeyField(JiraTicket, backref="allocations")
@@ -221,19 +246,27 @@ def db_reset():
     db.create_tables([CompanyBuildings, Person, Project, JiraTicket, PersonTickets, MeetingRequest], safe=True)
     # db.close()
 
+try:
+    ourProject = Project.createProject("covidspace.atlassian.net", "COV")
+except ValueError:
+    ourProject = Project.select().where(Project.projectID=="COV").get()
+except:
+    pass
+
 if __name__ == "__main__":
+    #db_reset()
     me = apiUser("rohanmaloney@outlook.com", "lxZVdyemldyTFkmwM5Hn94BD")
     auth = me.getAuth()
 
-    try:
-        proj = Project.createProject("covidspace.atlassian.net", "COV")
-    except ValueError:
-        proj = Project.select().where(Project.projectID=="COV").get()
-    try:
-        tick = JiraTicket.createTicket("COV-1", "COV")
-    except ValueError:
-        tick = JiraTicket.select().where(JiraTicket.ticketID=="COV-1").get()
+    # try:
+    #     proj = Project.createProject("covidspace.atlassian.net", "COV")
+    # except ValueError:
+    #     proj = Project.select().where(Project.projectID=="COV").get()
+    # try:
+    #     tick = JiraTicket.createTicket("COV-1", "COV")
+    # except ValueError:
+    #     tick = JiraTicket.select().where(JiraTicket.ticketID=="COV-1").get()
 
-    print(json.dumps(tick.getWatchers(auth), indent=4, separators=(",", ": ")))
+    # print(json.dumps(tick.getWatchers(auth), indent=4, separators=(",", ": ")))
 
     

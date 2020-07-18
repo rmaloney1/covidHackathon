@@ -9,6 +9,8 @@ verify_ssl = true
 peewee = "*"
 requests = "*"
 python-dotenv = "*"
+flask = "*"
+flask-restful = "*"
 
 [requires]
 python_version = "3.8"
