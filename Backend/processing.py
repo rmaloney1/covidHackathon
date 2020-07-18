@@ -52,6 +52,10 @@ def makeAllocations():
     capacity = CompanyBuildings.get().personCapacity
     currentAllocatedPersonCount = 0
     allocationDate = dt.date.today+dt.timedelta(days=1)
+    # if weekend tomorrow
+    if allocationDate.weekday()>=5:
+        allocationDate+=dt.timedelta(days=2)
+    
 
     #if there are gaps that are too small for important tasks, fill down particpant count
     i = 0
