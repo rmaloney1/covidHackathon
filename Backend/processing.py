@@ -55,7 +55,7 @@ def makeAllocations():
     # fill in tasks refering to priority up to the person count maximum
     capacity = CompanyBuildings.get().personCapacity
     currentAllocatedPersonCount = 0
-    allocationDate = dt.date.today + dt.timedelta(days=1)
+    allocationDate = dt.date.today() + dt.timedelta(days=1)
     # if weekend tomorrow
     if allocationDate.weekday() >= 5:
         allocationDate += dt.timedelta(days=2)

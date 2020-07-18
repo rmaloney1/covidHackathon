@@ -294,8 +294,11 @@ except ValueError:
 except Exception as e:
     print("whaaa", e)
     pass
-
+qry = CompanyBuildings.select()
+if not qry.exists():
+    CompanyBuildings.createRoom("devonshire", "DEV", 10)
 if __name__ == "__main__":
+    
     me = apiUser("rohanmaloney@outlook.com", "lxZVdyemldyTFkmwM5Hn94BD")
     auth = me.getAuth()
 
