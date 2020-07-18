@@ -1,6 +1,11 @@
 import os
 from urllib.parse import urlparse
-from peewee import Model, IntegrityError, PostgresqlDatabase, SqliteDatabase  # pylint: disable=unused-wildcard-import
+from peewee import (
+    Model,
+    IntegrityError,
+    PostgresqlDatabase,
+    SqliteDatabase,
+)  # pylint: disable=unused-wildcard-import
 from peewee import DateField, BooleanField, CharField, IntegerField, ForeignKeyField
 from playhouse.shortcuts import model_to_dict
 import datetime as dt
@@ -17,13 +22,20 @@ if "HEROKU" in os.environ:
         host=url.hostname,
         port=url.port,
     )
-else: 
+else:
     import getpass
+
     username = getpass.getuser()
-    if (username == "twright" or username == "tdcwr" or username == "tomhill" or username == "rohan"):
-        db = SqliteDatabase('test1.db')
+    if (
+        username == "twright"
+        or username == "tdcwr"
+        or username == "tomhill"
+        or username == "rohan"
+    ):
+        db = SqliteDatabase("test1.db")
     else:
-        from dotenv import load_dotenv # pylint: disable=import-error
+        from dotenv import load_dotenv  # pylint: disable=import-error
+
         load_dotenv()
         db_name = os.environ["DB_NAME"]
         db_user = os.environ["DB_USER"]
@@ -33,26 +45,28 @@ else:
 # Base Peewee class
 class Base(Model):
     class Meta:
-        database=db
+        database = db
+
 
 # Stores all offices (can be multiple buildings)
 class CompanyBuildings(Base):
     buildingCode = CharField(primary_key=True)
     buildingName = CharField()
     personCapacity = IntegerField()
-    
+
     @classmethod
     def createRoom(cls, buildingName, buildingCode, personCapacity):
         try:
             newBuilding = cls.create(
-                buildingCode = buildingCode,
-                buildingName = buildingName,
-                personCapacity = personCapacity
+                buildingCode=buildingCode,
+                buildingName=buildingName,
+                personCapacity=personCapacity,
             )
 
             return newBuilding
         except IntegrityError:
             raise ValueError(f"Building Already Exists")
+
 
 class Person(Base):
     personID = CharField(primary_key=True)
@@ -61,22 +75,24 @@ class Person(Base):
     @classmethod
     def createPerson(cls, personID, email):
         try:
-            newPerson = cls.create(
-                personID=personID,
-                email=email
-            )
+            newPerson = cls.create(personID=personID, email=email)
 
             return newPerson
         except IntegrityError:
             raise ValueError(f"Person Already Exists")
-    
+
     @property
     def activeTicketCount(self):
-        return (Person.select().join(PersonTickets)
-        .where(PersonTickets.ticketID.requestFilled == False)
-        .count())
+        return (
+            Person.select()
+            .join(PersonTickets)
+            .where(PersonTickets.ticketID.requestFilled == False)
+            .count()
+        )
+
 
 Person.select().where(Person.personID == "Tom Wright")
+
 
 class Project(Base):
     projectID = CharField(primary_key=True)
@@ -85,26 +101,23 @@ class Project(Base):
     @classmethod
     def createProject(cls, domain, projectID):
         try:
-            newProject = cls.create(
-                projectID=projectID,
-                domain=domain
-            )
+            newProject = cls.create(projectID=projectID, domain=domain)
 
             return newProject
         except IntegrityError:
             raise ValueError(f"Project Already Exists")
-    
+
     def getTicketKeys(self, auth):
         path = "/rest/api/3/search"
         query = {
-            'jql': f'project = {self.projectID}',
-            'fields' : 'key',
+            "jql": f"project = {self.projectID}",
+            "fields": "key",
         }
         queryObj = jiraQuery(auth, self.domain, path, query=query)
         response = queryObj.send()
         lis = [x["key"] for x in json.loads(response.text)["issues"]]
         return lis
-    
+
     def refreshTickets(self, auth):
         print("refreshing tickets")
         for key in self.getTicketKeys(auth):
@@ -112,12 +125,13 @@ class Project(Base):
                 newTicket = JiraTicket.createTicket(key, self.projectID, "", False)
             except ValueError as e:
                 print("error is ", e)
-                print('done')
-                newTicket = JiraTicket.select().where(JiraTicket.ticketID==key).get()
+                print("done")
+                newTicket = JiraTicket.select().where(JiraTicket.ticketID == key).get()
             except Exception as e:
                 print("what the fuck was this")
                 print(e)
             newTicket.setDeets(auth)
+
 
 class JiraTicket(Base):
     ticketID = CharField(primary_key=True)
@@ -129,66 +143,72 @@ class JiraTicket(Base):
     def createTicket(cls, ticketID, projectID, name, assigned=False):
         try:
             newTicket = cls.create(
-                ticketID = ticketID,
-                projectID = projectID,
-                name = name,
-                assinged = assigned
+                ticketID=ticketID, projectID=projectID, name=name, assigned=assigned
             )
 
             return newTicket
         except IntegrityError:
             raise ValueError(f"Ticket Already Exists")
-    
+
     def getFields(self, fields, auth):
         path = "/rest/api/3/issue/" + self.ticketID
-        query = {
-            'fields' : ','.join(fields)
-        }
+        query = {"fields": ",".join(fields)}
         queryObj = jiraQuery(auth, self.projectID.domain, path, query=query)
         response = queryObj.send()
         return json.loads(response.text)
-    
+
     def getWatchers(self, auth):
         path = f"/rest/api/3/issue/{self.ticketID}/watchers"
         queryObj = jiraQuery(auth, self.projectID.domain, path)
         response = queryObj.send()
         data = json.loads(response.text)["watchers"]
-        print(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
-        return [{k:i[k] for k in ["accountId", "displayName", "avatarUrls"]} for i in data]
-    
+        print(
+            json.dumps(
+                json.loads(response.text),
+                sort_keys=True,
+                indent=4,
+                separators=(",", ": "),
+            )
+        )
+        return [
+            {k: i[k] for k in ["accountId", "displayName", "avatarUrls"]} for i in data
+        ]
+
     def setDeets(self, auth):
-        fields = ['summary']
+        fields = ["summary"]
         data = self.getFields(fields, auth)["fields"]
         self.name = data["summary"]
         self.save()
         print("setting name of", self.ticketID, "to", self.name)
         self.genAttendees(auth)
-    
+
     def genAttendees(self, auth):
         for person in self.getWatchers(auth):
-            qry = Person.select().where(Person.personID==person["displayName"])
+            qry = Person.select().where(Person.personID == person["displayName"])
             if not qry.exists():
                 Person.createPerson(person["displayName"], "")
-            joinQry = PersonTickets.select().where((PersonTickets.person==person["displayName"]) & (PersonTickets.ticketID==self.ticketID))
+            joinQry = PersonTickets.select().where(
+                (PersonTickets.person == person["displayName"])
+                & (PersonTickets.ticketID == self.ticketID)
+            )
             if not joinQry.exists():
                 print("assigning ticket", self.ticketID, "to", person["displayName"])
                 PersonTickets.assignTickets(self.ticketID, person["displayName"])
 
+
 class PersonTickets(Base):
     ticketID = ForeignKeyField(JiraTicket, backref="allocations")
     person = ForeignKeyField(Person, backref="tickets")
-    
+
     @classmethod
     def assignTickets(cls, ticketID, person):
         try:
-            newAllocation = cls.create(
-                ticketID = ticketID,
-                person = person
-            )
+            newAllocation = cls.create(ticketID=ticketID, person=person)
 
             return newAllocation
         except IntegrityError:
             raise ValueError(f"Ticket Assign Already Exists")
+
 
 class MeetingRequest(Base):
     ticketID = ForeignKeyField(JiraTicket, backref="allocations")
@@ -199,19 +219,19 @@ class MeetingRequest(Base):
     dateAllocated = DateField(null=True)
 
     @classmethod
-    def makeRequest(cls, ticketID, afterDate,  dueDate, priority):
+    def makeRequest(cls, ticketID, afterDate, dueDate, priority):
         try:
             newAllocation = cls.create(
-                ticketID = ticketID,
-                afterDate = afterDate,
-                beforeDate = dueDate,
-                highPriority = priority
+                ticketID=ticketID,
+                afterDate=afterDate,
+                beforeDate=dueDate,
+                highPriority=priority,
             )
 
             return newAllocation
         except IntegrityError:
             raise ValueError(f"Ticket Assign Already Exists")
-    
+
     @property
     def priority(self):
         return self.highPriority
@@ -220,47 +240,62 @@ class MeetingRequest(Base):
     def allocatedDate(self):
         if self.requestFilled:
             return self.dateAllocated
-        
+
         else:
             return False
-    
+
     @allocatedDate.setter
     def allocatedDate(self, setDate):
         self.requestFilled = True
         self.dateAllocated = setDate
         self.save()
-    
+
     def elevatePriority(self):
         self.highPriority = True
         self.save()
-    
+
     @property
     def isActive(self):
-        if (self.beforeDate - dt.date.today()).days <=0 and not self.requestFilled:
+        if (self.beforeDate - dt.date.today()).days <= 0 and not self.requestFilled:
             return True
         else:
             return False
 
+
 def dbWipe():
-    modelList = [CompanyBuildings, Person, Project, JiraTicket, PersonTickets, MeetingRequest]
+    modelList = [
+        CompanyBuildings,
+        Person,
+        Project,
+        JiraTicket,
+        PersonTickets,
+        MeetingRequest,
+    ]
     for model in modelList:
-        model.delete().execute() # pylint: disable=no-value-for-parameter
+        model.delete().execute()  # pylint: disable=no-value-for-parameter
+
 
 def db_reset():
     db.connect()
     # db.drop_tables([CompanyBuildings, Person, Project, JiraTicket, PersonTickets, MeetingRequest])
-    db.create_tables([CompanyBuildings, Person, Project, JiraTicket, PersonTickets, MeetingRequest], safe=True)
+    db.create_tables(
+        [CompanyBuildings, Person, Project, JiraTicket, PersonTickets, MeetingRequest],
+        safe=True,
+    )
     # db.close()
 
+
 try:
+    db_reset()
     ourProject = Project.createProject("covidspace.atlassian.net", "COV")
 except ValueError:
-    ourProject = Project.select().where(Project.projectID=="COV").get()
-except:
+    ourProject = Project.select().where(Project.projectID == "COV").get()
+except Exception as e:
+    print("whaaa", e)
     pass
 
 if __name__ == "__main__":
-    #db_reset()
+
     me = apiUser("rohanmaloney@outlook.com", "lxZVdyemldyTFkmwM5Hn94BD")
     auth = me.getAuth()
 
@@ -275,42 +310,42 @@ if __name__ == "__main__":
 
     # print(json.dumps(tick.getWatchers(auth), indent=4, separators=(",", ": ")))
 
-    
+
 def createData():
     CompanyBuildings.createRoom("Building A", "Building A", 10)
 
-    Person.createPerson("Bessie Oakley","Email1@gmail.com")
-    Person.createPerson("Aaron Bryant","Email2@gmail.com")
-    Person.createPerson("Lester Hayward","Email3@gmail.com")
-    Person.createPerson("Asim Hobbs","Email4@gmail.com")
-    Person.createPerson("Harvie Betts","Email5@gmail.com")
-    Person.createPerson("Polly Findlay","Email6@gmail.com")
-    Person.createPerson("Philippa Rocha","Email7@gmail.com")
-    Person.createPerson("Rajveer Wright","Email8@gmail.com")
-    Person.createPerson("Zain Li","Email9@gmail.com")
-    Person.createPerson("Isobel Landry","Email10@gmail.com")
-    Person.createPerson("Myrtle Schroeder","Email11@gmail.com")
-    Person.createPerson("Gracie Byrd","Email12@gmail.com")
-    Person.createPerson("Ariana Bevan","Email13@gmail.com")
-    Person.createPerson("Sameeha Bowers","Email14@gmail.com")
-    Person.createPerson("Luc Fletcher","Email15@gmail.com")
-    Person.createPerson("Fred Gallagher","Email16@gmail.com")
-    Person.createPerson("Sneha Marsh","Email17@gmail.com")
-    Person.createPerson("Isha Wilson","Email18@gmail.com")
-    Person.createPerson("Cassie Mccartney","Email19@gmail.com")
-    Person.createPerson("Bea Key","Email20@gmail.com")
-    Person.createPerson("Nela Hoffman","Email21@gmail.com")
-    Person.createPerson("Ihsan Vu","Email22@gmail.com")
-    Person.createPerson("Ivy Ayala","Email23@gmail.com")
-    Person.createPerson("Aasiyah Mata","Email24@gmail.com")
-    Person.createPerson("Esmai Clark","Email25@gmail.com")
-    Person.createPerson("Isla Good","Email26@gmail.com")
-    Person.createPerson("Arman Yoder","Email27@gmail.com")
-    Person.createPerson("Meerab Hills","Email28@gmail.com")
-    Person.createPerson("Brandi Davey","Email29@gmail.com")
-    Person.createPerson("Kaitlyn Pineda","Email30@gmail.com")
+    Person.createPerson("Bessie Oakley", "Email1@gmail.com")
+    Person.createPerson("Aaron Bryant", "Email2@gmail.com")
+    Person.createPerson("Lester Hayward", "Email3@gmail.com")
+    Person.createPerson("Asim Hobbs", "Email4@gmail.com")
+    Person.createPerson("Harvie Betts", "Email5@gmail.com")
+    Person.createPerson("Polly Findlay", "Email6@gmail.com")
+    Person.createPerson("Philippa Rocha", "Email7@gmail.com")
+    Person.createPerson("Rajveer Wright", "Email8@gmail.com")
+    Person.createPerson("Zain Li", "Email9@gmail.com")
+    Person.createPerson("Isobel Landry", "Email10@gmail.com")
+    Person.createPerson("Myrtle Schroeder", "Email11@gmail.com")
+    Person.createPerson("Gracie Byrd", "Email12@gmail.com")
+    Person.createPerson("Ariana Bevan", "Email13@gmail.com")
+    Person.createPerson("Sameeha Bowers", "Email14@gmail.com")
+    Person.createPerson("Luc Fletcher", "Email15@gmail.com")
+    Person.createPerson("Fred Gallagher", "Email16@gmail.com")
+    Person.createPerson("Sneha Marsh", "Email17@gmail.com")
+    Person.createPerson("Isha Wilson", "Email18@gmail.com")
+    Person.createPerson("Cassie Mccartney", "Email19@gmail.com")
+    Person.createPerson("Bea Key", "Email20@gmail.com")
+    Person.createPerson("Nela Hoffman", "Email21@gmail.com")
+    Person.createPerson("Ihsan Vu", "Email22@gmail.com")
+    Person.createPerson("Ivy Ayala", "Email23@gmail.com")
+    Person.createPerson("Aasiyah Mata", "Email24@gmail.com")
+    Person.createPerson("Esmai Clark", "Email25@gmail.com")
+    Person.createPerson("Isla Good", "Email26@gmail.com")
+    Person.createPerson("Arman Yoder", "Email27@gmail.com")
+    Person.createPerson("Meerab Hills", "Email28@gmail.com")
+    Person.createPerson("Brandi Davey", "Email29@gmail.com")
+    Person.createPerson("Kaitlyn Pineda", "Email30@gmail.com")
 
-    Project.createProject("projectSet","Extra-Project")
+    Project.createProject("projectSet", "Extra-Project")
 
     JiraTicket.createTicket("PAJ-1", "Extra-Project", "Absolute electrode potential")
     JiraTicket.createTicket("PAJ-2", "Extra-Project", "Absolute pressure")
