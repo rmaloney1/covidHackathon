@@ -1,6 +1,33 @@
+import { useState } from "react";
+
+import { useToasts } from "react-toast-notifications";
+
+import API from "../lib/api/api";
+
 export default function signup() {
+  const { addToast } = useToasts();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   const handleSignUp = () => {
-    console.log("dosignup");
+    API.register(name, email)
+      .then((res) => {
+        addToast("Signed up", {
+          appearance: "success",
+          autoDismiss: true,
+          autoDismissTimeout: 2500,
+        });
+      })
+      .catch((err) => {
+        console.error(err);
+        addToast("Sign up failed: ", {
+          appearance: "error",
+          autoDismiss: true,
+          autoDismissTimeout: 2500,
+        });
+      });
   };
 
   return (
@@ -9,7 +36,13 @@ export default function signup() {
         <h1 className="title is-3">Sign Up</h1>
         <div className="field">
           <label className="label">Name</label>
-          <input className="input" type="text" placeholder="Jon Snow" />
+          <input
+            className="input"
+            type="text"
+            placeholder="Jon Snow"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
         </div>
         <div className="field">
           <label className="label">Email</label>
@@ -17,11 +50,18 @@ export default function signup() {
             className="input"
             type="email"
             placeholder="jon@winterfell.westeros"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
         </div>
         <div className="field">
           <label className="label">Password</label>
-          <input className="input" type="password" />
+          <input
+            className="input"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </div>
         <button className="button is-light is-success" onClick={handleSignUp}>
           Signup
