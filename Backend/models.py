@@ -245,8 +245,7 @@ class MeetingRequest(Base):
         else:
             return False
 
-    @allocatedDate.setter
-    def allocatedDate(self, setDate):
+    def allocateDate(self, setDate):
         self.requestFilled = True
         self.dateAllocated = setDate
         self.save()
