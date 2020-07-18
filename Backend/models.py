@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 from peewee import Model, IntegrityError, PostgresqlDatabase, SqliteDatabase  # pylint: disable=unused-wildcard-import
 from peewee import DateField, BooleanField, CharField, IntegerField, ForeignKeyField
 from playhouse.shortcuts import model_to_dict
+from playhouse.hybrid import hybrid_property
 import datetime as dt
 import json
 
@@ -69,6 +70,14 @@ class Person(Base):
             return newPerson
         except IntegrityError:
             raise ValueError(f"Person Already Exists")
+    
+    @hybrid_property
+    def activeTicketCount(self):
+        return (Person.join(PersonTickets).select()
+        .where(PersonTickets.ticketID.requestFilled == False)
+        .count())
+
+Person.select().where(Person.personID == "Tom Wright")
 
 class Project(Base):
     projectID = CharField(primary_key=True)
@@ -160,7 +169,7 @@ class MeetingRequest(Base):
     dateAllocated = DateField(null=True)
 
     @classmethod
-    def makeRequest(cls, ticketID,afterDate,  dueDate, priority):
+    def makeRequest(cls, ticketID, afterDate,  dueDate, priority):
         try:
             newAllocation = cls.create(
                 ticketID = ticketID,
@@ -174,6 +183,10 @@ class MeetingRequest(Base):
             raise ValueError(f"Ticket Assign Already Exists")
     
     @property
+    def priority(self):
+        return self.highPriority
+
+    @property
     def allocatedDate(self):
         if self.requestFilled:
             return self.dateAllocated
@@ -185,6 +198,10 @@ class MeetingRequest(Base):
     def allocatedDate(self, setDate):
         self.requestFilled = True
         self.dateAllocated = setDate
+        self.save()
+    
+    def elevatePriority(self):
+        self.highPriority = True
         self.save()
 
 def dbWipe():
