@@ -162,11 +162,17 @@ class JiraTicket(Base):
         self.name = data["summary"]
         self.save()
         print("setting name of", self.ticketID, "to", self.name)
+        self.genAttendees(auth)
     
-
-    # def genAttendees(self, auth):
-    #     for person in self.getWatchers(auth):
-    #         if Person.get()
+    def genAttendees(self, auth):
+        for person in self.getWatchers(auth):
+            qry = Person.select().where(Person.personID==person["displayName"])
+            if not qry.exists():
+                Person.createPerson(person["displayName"], "")
+            joinQry = PersonTickets.select().where((PersonTickets.person==person["displayName"]) & (PersonTickets.ticketID==self.ticketID))
+            if not joinQry.exists():
+                print("assigning ticket", self.ticketID, "to", person["displayName"])
+                PersonTickets.assignTickets(self.ticketID, person["displayName"])
 
 class PersonTickets(Base):
     ticketID = ForeignKeyField(JiraTicket, backref="allocations")
