@@ -34,13 +34,15 @@ class Base(Model):
 class CompanyBuildings(Base):
     buildingCode = CharField(primary_key=True)
     buildingName = CharField()
+    capacity = IntegerField()
     
     @classmethod
-    def createRoom(cls, buildingName, buildingCode):
+    def createRoom(cls, buildingName, buildingCode, capacity):
         try:
             newBuilding = cls.create(
                 buildingCode = buildingCode,
                 buildingName = buildingName
+                capacity = capacity
             )
 
             return newBuilding
@@ -48,50 +50,50 @@ class CompanyBuildings(Base):
             raise ValueError(f"Building Already Exists")
 
 # a set of desks
-class Space(Base):
-    building = ForeignKeyField(CompanyBuildings, backref="spaces")
-    spaceName = CharField()
-    spaceID = CharField(primary_key=True)
+# class Space(Base):
+#     building = ForeignKeyField(CompanyBuildings, backref="spaces")
+#     spaceName = CharField()
+#     spaceID = CharField(primary_key=True)
 
-    @classmethod
-    def createSpace(cls, spaceName, spaceID, building):
-        try:
-            newSpace = cls.create(
-                building = building,
-                spaceName = spaceName,
-                spaceID = spaceID
-            )
+#     @classmethod
+#     def createSpace(cls, spaceName, spaceID, building):
+#         try:
+#             newSpace = cls.create(
+#                 building = building,
+#                 spaceName = spaceName,
+#                 spaceID = spaceID
+#             )
 
-            return newSpace
-        except IntegrityError:
-            raise ValueError(f"Space Already Exists")
+#             return newSpace
+#         except IntegrityError:
+#             raise ValueError(f"Space Already Exists")
 
-    @property
-    def numOfDesks(self):
-        desks = (
-            Desk.select()
-            .where(Desk.spaceID == self.spaceID)
-        )
+#     @property
+#     def numOfDesks(self):
+#         desks = (
+#             Desk.select()
+#             .where(Desk.spaceID == self.spaceID)
+#         )
 
-        return desks.count()
+#         return desks.count()
 
-class Desk(Base):
-    space = ForeignKeyField(Space, backref="desks")
-    deskName = CharField()
-    deskID = CharField(primary_key=True)
+# class Desk(Base):
+#     space = ForeignKeyField(Space, backref="desks")
+#     deskName = CharField()
+#     deskID = CharField(primary_key=True)
 
-    @classmethod
-    def createDesk(cls, deskName, deskID, space):
-        try:
-            newDesk = cls.create(
-                space = space,
-                deskName = deskName,
-                deskID = f"{space}-{deskName}"
-            )
+#     @classmethod
+#     def createDesk(cls, deskName, deskID, space):
+#         try:
+#             newDesk = cls.create(
+#                 space = space,
+#                 deskName = deskName,
+#                 deskID = f"{space}-{deskName}"
+#             )
 
-            return newDesk
-        except IntegrityError:
-            raise ValueError(f"Desk Already Exists")
+#             return newDesk
+#         except IntegrityError:
+#             raise ValueError(f"Desk Already Exists")
 
 class Person(Base):
     isPM = BooleanField(default=False)
@@ -161,45 +163,45 @@ class JiraTicket(Base):
          .where(JiraTicket.ticketID == self.ticketID)
          .execute())
 
-class ProjectSpaceAllocation(Base):
-    allocationDate = DateField()
-    space = ForeignKeyField(Space, backref="projectAllocations")
-    project = ForeignKeyField(Project, backref="spaceAllocations")
+# class ProjectSpaceAllocation(Base):
+#     allocationDate = DateField()
+#     space = ForeignKeyField(Space, backref="projectAllocations")
+#     project = ForeignKeyField(Project, backref="spaceAllocations")
 
-    # Date as a date object
-    @classmethod
-    def AllocateProjectSpace(cls, space, project, date):
-        # DEBUG: make sure date works
-        try:
-            newAllocation = cls.create(
-                allocationDate = date,
-                space = space,
-                project = project
-            )
+#     # Date as a date object
+#     @classmethod
+#     def AllocateProjectSpace(cls, space, project, date):
+#         # DEBUG: make sure date works
+#         try:
+#             newAllocation = cls.create(
+#                 allocationDate = date,
+#                 space = space,
+#                 project = project
+#             )
 
-            return newAllocation
-        except IntegrityError:
-            raise ValueError(f"Project/Space Allocation Already Exists")
+#             return newAllocation
+#         except IntegrityError:
+#             raise ValueError(f"Project/Space Allocation Already Exists")
 
-class AllocatedDesk(Base):
-    allocationDate = DateField()
-    desk = ForeignKeyField(Desk, backref="personAllocations")
-    person = ForeignKeyField(Person, backref="deskAllocations")
+# class AllocatedDesk(Base):
+#     allocationDate = DateField()
+#     desk = ForeignKeyField(Desk, backref="personAllocations")
+#     person = ForeignKeyField(Person, backref="deskAllocations")
 
-    # Date as a date object
-    @classmethod
-    def AllocateDeskToPerson(cls, desk, person, date):
-        # DEBUG: make sure date works
-        try:
-            newAllocation = cls.create(
-                allocationDate = date,
-                desk = desk,
-                person = person
-            )
+#     # Date as a date object
+#     @classmethod
+#     def AllocateDeskToPerson(cls, desk, person, date):
+#         # DEBUG: make sure date works
+#         try:
+#             newAllocation = cls.create(
+#                 allocationDate = date,
+#                 desk = desk,
+#                 person = person
+#             )
 
-            return newAllocation
-        except IntegrityError:
-            raise ValueError(f"Person/Desk Allocation Already Exists")
+#             return newAllocation
+#         except IntegrityError:
+#             raise ValueError(f"Person/Desk Allocation Already Exists")
 
 class PersonTickets(Base):
     ticketID = ForeignKeyField(JiraTicket, backref="allocations")
@@ -217,29 +219,47 @@ class PersonTickets(Base):
         except IntegrityError:
             raise ValueError(f"Ticket Assign Already Exists")
 
-class PersonProjects(Base):
-    projectID = ForeignKeyField(Project, backref="allocations")
-    person = ForeignKeyField(Person, backref="projects")
-    
+class MeetingRequest(Base):
+    ticketID = ForeignKeyField(JiraTicket, backref="allocations")
+    requestID = IntegerField()
+    beforeDate = DateField()
+    requestFilled = BooleanField(default=False)
+
     @classmethod
-    def assignProjects(cls, projectID, person):
+    def makeRequest(cls, ticketID, dueDate):
         try:
             newAllocation = cls.create(
-                projectID = projectID,
+                ticketID = ticketID,
                 person = person
             )
 
             return newAllocation
         except IntegrityError:
-            raise ValueError(f"Project Assign Already Exists")
+            raise ValueError(f"Ticket Assign Already Exists")
 
-# def dbWipe():
-#     modelList = [AllocatedRoom, Student, Room, Floor, SystemInformation]
-#     for model in modelList:
-#         model.delete().execute() # pylint: disable=no-value-for-parameter
+# class PersonProjects(Base):
+#     projectID = ForeignKeyField(Project, backref="allocations")
+#     person = ForeignKeyField(Person, backref="projects")
+    
+#     @classmethod
+#     def assignProjects(cls, projectID, person):
+#         try:
+#             newAllocation = cls.create(
+#                 projectID = projectID,
+#                 person = person
+#             )
 
-# def db_reset():
-#     db.connect()
-#     # db.drop_tables([Student, Floor, Room, AllocatedRoom, SystemInformation])
-#     db.create_tables([Student, Floor, Room, AllocatedRoom, SystemInformation], safe=True)
-#     db.close()
+#             return newAllocation
+#         except IntegrityError:
+#             raise ValueError(f"Project Assign Already Exists")
+
+def dbWipe():
+    modelList = [CompanyBuildings, Person, ]
+    for model in modelList:
+        model.delete().execute() # pylint: disable=no-value-for-parameter
+
+def db_reset():
+    db.connect()
+    # db.drop_tables([Student, Floor, Room, AllocatedRoom, SystemInformation])
+    db.create_tables([Student, Floor, Room, AllocatedRoom, SystemInformation], safe=True)
+    db.close()
