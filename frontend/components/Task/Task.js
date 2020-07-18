@@ -83,6 +83,8 @@ export default function Task(props) {
                     setShowModal(false);
                     props.onInPerson({
                       ...props.task,
+                      afterDate: startDate,
+                      endDate,
                       meeting: true,
                       priority: "high",
                     });

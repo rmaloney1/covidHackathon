@@ -125,11 +125,11 @@ class Project(Base):
             try:
                 newTicket = JiraTicket.createTicket(key, self.projectID, "", False)
             except ValueError as e:
-                print("error is ", e)
-                print("done")
+                # print("error is ", e)
+                # print("done")
                 newTicket = JiraTicket.select().where(JiraTicket.ticketID == key).get()
             except Exception as e:
-                print("what the fuck was this")
+                # print("what the fuck was this")
                 print(e)
             newTicket.setDeets(auth)
 
@@ -163,14 +163,14 @@ class JiraTicket(Base):
         queryObj = jiraQuery(auth, self.projectID.domain, path)
         response = queryObj.send()
         data = json.loads(response.text)["watchers"]
-        print(
-            json.dumps(
-                json.loads(response.text),
-                sort_keys=True,
-                indent=4,
-                separators=(",", ": "),
-            )
-        )
+        # print(
+        #     json.dumps(
+        #         json.loads(response.text),
+        #         sort_keys=True,
+        #         indent=4,
+        #         separators=(",", ": "),
+        #     )
+        # )
         return [
             {k: i[k] for k in ["accountId", "displayName", "avatarUrls"]} for i in data
         ]

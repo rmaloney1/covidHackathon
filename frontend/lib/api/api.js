@@ -13,6 +13,8 @@ const API = {
   login: (email) => api.get(`/user?email=${email}`),
   register: (name, email) => api.post("/user", { name, email }),
   getTasks: () => api.get("/tasks"),
+  doTaskInPerson: (id, afterDate, dueDate, priority) =>
+    api.post(`/tasks`, { ticketID: id, afterDate, dueDate, priority }),
 };
 
 export default API;
