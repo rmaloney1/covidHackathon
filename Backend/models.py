@@ -34,15 +34,15 @@ class Base(Model):
 class CompanyBuildings(Base):
     buildingCode = CharField(primary_key=True)
     buildingName = CharField()
-    capacity = IntegerField()
+    personCapacity = IntegerField()
     
     @classmethod
-    def createRoom(cls, buildingName, buildingCode, capacity):
+    def createRoom(cls, buildingName, buildingCode, personCapacity):
         try:
             newBuilding = cls.create(
                 buildingCode = buildingCode,
                 buildingName = buildingName,
-                capacity = capacity
+                personCapacity = personCapacity
             )
 
             return newBuilding
@@ -135,15 +135,17 @@ class PersonTickets(Base):
 class MeetingRequest(Base):
     ticketID = ForeignKeyField(JiraTicket, backref="allocations")
     beforeDate = DateField()
+    highPriority = BooleanField()
     requestFilled = BooleanField(default=False)
     dateAllocated = DateField(null=True)
 
     @classmethod
-    def makeRequest(cls, ticketID, dueDate):
+    def makeRequest(cls, ticketID, dueDate, priority):
         try:
             newAllocation = cls.create(
                 ticketID = ticketID,
-                beforeDate = dueDate
+                beforeDate = dueDate,
+                highPriority = priority
             )
 
             return newAllocation
