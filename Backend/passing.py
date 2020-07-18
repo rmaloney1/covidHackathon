@@ -15,13 +15,14 @@ api = Api(app)
 class user(Resource):
     def post(self):
         # name and email
-        data = json.loads(request.json)
+        data = request.json
         name = data["name"]
         email = data["email"]
         Person.createPerson(name, email)
         return {}
 
     def get(self):
+        print("hi")
         email = request.args["email"]
         person = Person.select().where(Person.email==email).get()
         if not person:
