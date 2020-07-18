@@ -61,8 +61,8 @@ def makeAllocations():
         allocationDate += dt.timedelta(days=2)
 
     # if there are gaps that are too small for important tasks, fill down particpant count
-    i = 0
-    while currentAllocatedPersonCount <= capacity or i < len(sortedList["requests"]):
+    i = 0    
+    while currentAllocatedPersonCount <= capacity and i < len(sortedList["requests"]):
         if (capacity - currentAllocatedPersonCount) >= sortedList["personCount"][i]:
             sortedList["requests"][i].allocatedDate = allocationDate
             currentAllocatedPersonCount += sortedList["personCount"][i]
@@ -72,7 +72,7 @@ def makeAllocations():
     # for each task calculate a score
     lowPrioritySortedList = createSortedTaskList(False)
     i = 0
-    while currentAllocatedPersonCount <= capacity or i < len(lowPrioritySortedList["requests"]):
+    while currentAllocatedPersonCount <= capacity and i < len(lowPrioritySortedList["requests"]):
         if ((capacity - currentAllocatedPersonCount) >= lowPrioritySortedList["personCount"][i]):
             lowPrioritySortedList["requests"][i].allocatedDate = allocationDate
             currentAllocatedPersonCount += lowPrioritySortedList["personCount"][i]
