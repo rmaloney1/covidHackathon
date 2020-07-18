@@ -126,18 +126,40 @@ class Project(Base):
 class JiraTicket(Base):
     ticketID = CharField(primary_key=True)
     projectID = ForeignKeyField(Project, backref="tickets")
+    ticketPriority = IntegerField()
+    meetingDate = DateField(null=True)
 
     @classmethod
-    def createTicket(cls, ticketID, projectID):
+    def createTicket(cls, ticketID, projectID, priority):
         try:
             newTicket = cls.create(
                 ticketID = ticketID,
-                projectID = projectID
+                projectID = projectID,
+                ticketPriority = priority
             )
 
             return newTicket
         except IntegrityError:
             raise ValueError(f"Ticket Already Exists")
+    
+    @property
+    def priority(self):
+        if (self.ticketPriority == 1):
+            # meeting
+            return True
+        elif (self.ticketPriority == 0):
+            #non meeting
+            return False
+    
+    @property
+    def ticketDate (self):
+        return self.meetingDate
+    
+    @ticketDate.setter
+    def ticketDate(self, newDate):
+        (JiraTicket.update(meetingDate=newDate)
+         .where(JiraTicket.ticketID == self.ticketID)
+         .execute())
 
 class ProjectSpaceAllocation(Base):
     allocationDate = DateField()
