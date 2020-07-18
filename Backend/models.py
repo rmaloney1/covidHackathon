@@ -125,12 +125,14 @@ class Project(Base):
 
 class JiraTicket(Base):
     ticketID = CharField(primary_key=True)
+    projectID = ForeignKeyField(Project, backref="tickets")
 
     @classmethod
-    def createTicket(cls, ticketID):
+    def createTicket(cls, ticketID, projectID):
         try:
             newTicket = cls.create(
-                ticketID=ticketID
+                ticketID = ticketID,
+                projectID = projectID
             )
 
             return newTicket
@@ -208,7 +210,6 @@ class PersonProjects(Base):
             return newAllocation
         except IntegrityError:
             raise ValueError(f"Project Assign Already Exists")
-
 
 # def dbWipe():
 #     modelList = [AllocatedRoom, Student, Room, Floor, SystemInformation]
