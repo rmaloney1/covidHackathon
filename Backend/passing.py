@@ -48,7 +48,6 @@ class user(Resource):
 class tasks(Resource):
     def get(self):
         print("yo")
-        ourProject.refreshTickets(auth)
         tasks = JiraTicket.select()
         verbose = []
         for task in tasks:
@@ -77,46 +76,65 @@ class tasks(Resource):
         MeetingRequest.makeRequest(ticketID, afterDate, dueDate, priority)
         return {}
 
+class refresh(Resource):
+    def post(self):
+        ourProject.refreshTickets(auth)
+        return {}
 
 class calendar(Resource):
     def get(self):
         output = []
         # A list of all people that have a allocated task
-        fullPersonTaskList = (
-            PersonTickets.select()
-            .join(
-                MeetingRequest, on=(MeetingRequest.ticketID == PersonTickets.ticketID)
-            )
-            .where(MeetingRequest.requestFilled == True)
-        )
+        # fullPersonTaskList = (
+        #     PersonTickets.select()
+        #     .join(
+        #         MeetingRequest, on=(MeetingRequest.ticketID == PersonTickets.ticketID)
+        #     )
+        #     .where(MeetingRequest.requestFilled == True)
+        # )
         all_people = Person.select()
         for person in all_people.iterator():
             allocated_tickets = ( 
-                PersonTickets.select()
+                JiraTicket.select()
                 .join(
-                    MeetingRequest, on=(MeetingRequest.ticketID == PersonTickets.ticketID)
+                    PersonTickets, on=(JiraTicket.ticketID == PersonTickets.ticketID)
+                )
+                .join(
+                    MeetingRequest, on=(MeetingRequest.ticketID == JiraTicket.ticketID)
                 )
                 .where((MeetingRequest.requestFilled == True) & (PersonTickets.person == person.personID))
             )
-        for personTask in fullPersonTaskList.iterator():
-            found = False
-            taskSummary = {
-                "name": personTask.ticketID.name,
-                "attendees": [
-                    t
-                    for t in PersonTickets.select().where(
-                        PersonTickets.person == personTask.person
-                    )
-                ],
-                "day": (personTask.dateAllocated).strftime("%m/%d/%Y"),
-            }
-            for i in output:
-                if output[i]["Name"] == personTask.person:
-                    found = True
-                    output[i]["meetings"].append(taskSummary)
+            mytasks = []
+            for ticket in allocated_tickets:
+                mytasks.append({
+                    "name" : ticket.ticketID, 
+                    "day" : (ticket.dateAllocated).strftime("%m/%d/%Y"),
+                    "attendees" : [
+                        t.person
+                        for t in PersonTickets.select().where(
+                            PersonTickets.ticketID == ticket.ticketID
+                        )
+                    ]})
+            output.append({person.personID : mytasks})
+        # for personTask in fullPersonTaskList.iterator():
+        #     found = False
+        #     taskSummary = {
+        #         "name": personTask.ticketID.name,
+        #         "attendees": [
+        #             t
+        #             for t in PersonTickets.select().where(
+        #                 PersonTickets.person == personTask.person
+        #             )
+        #         ],
+        #         "day": (personTask.dateAllocated).strftime("%m/%d/%Y"),
+        #     }
+        #     for i in output:
+        #         if output[i]["Name"] == personTask.person:
+        #             found = True
+        #             output[i]["meetings"].append(taskSummary)
 
-            if not found:
-                output.append({"Name": personTask.person, "meetings": [taskSummary]})
+        #     if not found:
+        #         output.append({"Name": personTask.person, "meetings": [taskSummary]})
         return output
 
 
@@ -135,6 +153,7 @@ api.add_resource(tasks, "/tasks")
 api.add_resource(calendar, "/calendar")
 api.add_resource(trace, "/trace/<string:p_id>")
 api.add_resource(allocate, "/allocate")
+api.add_resource(refresh, "/refresh")
 
 if __name__ == "__main__":
     app.run(debug=True)
