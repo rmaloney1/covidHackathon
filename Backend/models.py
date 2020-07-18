@@ -19,7 +19,7 @@ if "HEROKU" in os.environ:
 else: 
     import getpass
     username = getpass.getuser()
-    if (username == "twright" or username == "tdcwr" or username == "tomhill"):
+    if (username == "twright" or username == "tdcwr" or username == "tomhill" or username == "rohan"):
         db = SqliteDatabase('test1.db')
     else:
         from dotenv import load_dotenv # pylint: disable=import-error
@@ -196,10 +196,16 @@ def db_reset():
 if __name__ == "__main__":
     me = apiUser("rohanmaloney@outlook.com", "lxZVdyemldyTFkmwM5Hn94BD")
     auth = me.getAuth()
-    proj = Project.createProject("covidspace.atlassian.net", "COV")
 
-    tick = JiraTicket.createTicket("COV-1", "COV")
+    try:
+        proj = Project.createProject("covidspace.atlassian.net", "COV")
+    except ValueError:
+        proj = Project.select().where(Project.projectID=="COV").get()
+    try:
+        tick = JiraTicket.createTicket("COV-1", "COV")
+    except ValueError:
+        tick = JiraTicket.select().where(JiraTicket.ticketID=="COV-1").get()
 
-    print(tick.getWatchers(auth))
+    print(json.dumps(tick.getWatchers(auth), indent=4, separators=(",", ": ")))
 
     
