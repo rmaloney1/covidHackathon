@@ -1,9 +1,10 @@
 from flask import Flask, request
 from flask_restful import Resource, Api, abort
 import json
-from models import CompanyBuildings, Person, Project, JiraTicket, PersonTickets, MeetingRequest, model_to_dict
+from models import CompanyBuildings, Person, Project, JiraTicket, PersonTickets, MeetingRequest, model_to_dict, apiUser, ourProject
 
-
+me = apiUser("rohanmaloney@outlook.com", "lxZVdyemldyTFkmwM5Hn94BD")
+auth = me.getAuth()
 
 app = Flask(__name__)
 api = Api(app)
@@ -35,12 +36,14 @@ class user(Resource):
 
 class tasks(Resource):
     def get(self):
-        
+        print("yo")
+        ourProject.refreshTickets(auth)
         tasks = JiraTicket.select()
         verbose = []
         for task in tasks:
             details = {}
             details["name"] = task.name
+            print("name of", task.ticketID, "is", task.name)
             details["status"] = "in person" if task.assigned else "unassigned"
             attendees = PersonTickets.select().where(PersonTickets.ticketID==task.ticketID)
             names = [i.person.personID for i in attendees]
