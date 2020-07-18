@@ -3,7 +3,6 @@ from urllib.parse import urlparse
 from peewee import Model, IntegrityError, PostgresqlDatabase, SqliteDatabase  # pylint: disable=unused-wildcard-import
 from peewee import DateField, BooleanField, CharField, IntegerField, ForeignKeyField
 from playhouse.shortcuts import model_to_dict
-from playhouse.hybrid import hybrid_property
 import datetime as dt
 import json
 
@@ -71,7 +70,7 @@ class Person(Base):
         except IntegrityError:
             raise ValueError(f"Person Already Exists")
     
-    @hybrid_property
+    @property
     def activeTicketCount(self):
         return (Person.select().join(PersonTickets)
         .where(PersonTickets.ticketID.requestFilled == False)
@@ -228,6 +227,13 @@ class MeetingRequest(Base):
     def elevatePriority(self):
         self.highPriority = True
         self.save()
+    
+    @property
+    def isActive(self):
+        if (self.beforeDate - dt.date.today()).days <=0 and not self.requestFilled:
+            return True
+        else:
+            return False
 
 def dbWipe():
     modelList = [CompanyBuildings, Person, Project, JiraTicket, PersonTickets, MeetingRequest]
