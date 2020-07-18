@@ -48,7 +48,6 @@ class user(Resource):
 class tasks(Resource):
     def get(self):
         print("yo")
-        ourProject.refreshTickets(auth)
         tasks = JiraTicket.select()
         verbose = []
         for task in tasks:
@@ -77,6 +76,10 @@ class tasks(Resource):
         MeetingRequest.makeRequest(ticketID, afterDate, dueDate, priority)
         return {}
 
+class refresh(Resource):
+    def post(self):
+        ourProject.refreshTickets(auth)
+        return {}
 
 class calendar(Resource):
     def get(self):
@@ -135,6 +138,7 @@ api.add_resource(tasks, "/tasks")
 api.add_resource(calendar, "/calendar")
 api.add_resource(trace, "/trace/<string:p_id>")
 api.add_resource(allocate, "/allocate")
+api.add_resource(refresh, "/refresh")
 
 if __name__ == "__main__":
     app.run(debug=True)
