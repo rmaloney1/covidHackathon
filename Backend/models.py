@@ -155,7 +155,7 @@ class MeetingRequest(Base):
     dateAllocated = DateField(null=True)
 
     @classmethod
-    def makeRequest(cls, ticketID,afterDate,  dueDate, priority):
+    def makeRequest(cls, ticketID, afterDate,  dueDate, priority):
         try:
             newAllocation = cls.create(
                 ticketID = ticketID,
