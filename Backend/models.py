@@ -1,6 +1,7 @@
 import os
 from urllib.parse import urlparse
 from peewee import *  # pylint: disable=unused-wildcard-import
+from playhouse.shortcuts import model_to_dict
 import datetime as dt
 import json
 
@@ -147,16 +148,18 @@ class PersonTickets(Base):
 
 class MeetingRequest(Base):
     ticketID = ForeignKeyField(JiraTicket, backref="allocations")
+    afterDate = DateField()
     beforeDate = DateField()
     highPriority = BooleanField()
     requestFilled = BooleanField(default=False)
     dateAllocated = DateField(null=True)
 
     @classmethod
-    def makeRequest(cls, ticketID, dueDate, priority):
+    def makeRequest(cls, ticketID,afterDate,  dueDate, priority):
         try:
             newAllocation = cls.create(
                 ticketID = ticketID,
+                afterDate = afterDate,
                 beforeDate = dueDate,
                 highPriority = priority
             )
