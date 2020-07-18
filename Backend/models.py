@@ -3,6 +3,9 @@ from urllib.parse import urlparse
 from peewee import *  # pylint: disable=unused-wildcard-import
 from playhouse.shortcuts import model_to_dict
 import datetime as dt
+import json
+
+from jira import jiraQuery, apiUser
 
 if "HEROKU" in os.environ:
     url = urlparse(os.environ["DATABASE_URL"])
@@ -51,15 +54,13 @@ class CompanyBuildings(Base):
             raise ValueError(f"Building Already Exists")
 
 class Person(Base):
-    isPM = BooleanField(default=False)
     personID = CharField(primary_key=True)
 
     @classmethod
-    def createPerson(cls, personID, isPM=False):
+    def createPerson(cls, personID):
         try:
             newPerson = cls.create(
                 personID=personID,
-                isPM=isPM
             )
 
             return newPerson
@@ -68,54 +69,66 @@ class Person(Base):
 
 class Project(Base):
     projectID = CharField(primary_key=True)
+    domain = CharField()
 
     @classmethod
-    def createProject(cls, projectID):
+    def createProject(cls, domain, projectID):
         try:
             newProject = cls.create(
-                projectID=projectID
+                projectID=projectID,
+                domain=domain
             )
 
             return newProject
         except IntegrityError:
             raise ValueError(f"Project Already Exists")
+    
+    def getTicketKeys(self, auth):
+        path = "/rest/api/3/search"
+        query = {
+            'jql': f'project = {self.projectID}',
+            'fields' : 'key',
+        }
+        queryObj = jiraQuery(auth, self.domain, path, query=query)
+        response = queryObj.send()
+        lis = [x["key"] for x in json.loads(response.text)["issues"]]
+        return lis
+    
+    def getTickets(self, auth):
+        return [JiraTicket(key, self.projectID) for key in self.getTicketKeys(auth)]
 
 class JiraTicket(Base):
     ticketID = CharField(primary_key=True)
     projectID = ForeignKeyField(Project, backref="tickets")
-    ticketPriority = IntegerField()
-    meetingDate = DateField(null=True)
 
     @classmethod
-    def createTicket(cls, ticketID, projectID, priority):
+    def createTicket(cls, ticketID, projectID):
         try:
             newTicket = cls.create(
                 ticketID = ticketID,
                 projectID = projectID,
-                ticketPriority = priority
             )
 
             return newTicket
         except IntegrityError:
             raise ValueError(f"Ticket Already Exists")
     
-    @property
-    def priority(self):
-        if (self.ticketPriority == 1):
-            # meeting
-            return True
-        elif (self.ticketPriority == 0):
-            #non meeting
-            return False
+    def getFields(self, fields, auth):
+        path = "/rest/api/3/issue/" + self.ticketID
+        query = {
+            'fields' : ','.join(fields)
+        }
+        queryObj = jiraQuery(auth, self.projectID.domain, path, query=query)
+        response = queryObj.send()
+        return json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": "))
     
-    @property
-    def ticketDate (self):
-        return self.meetingDate
-    
-    @ticketDate.setter
-    def ticketDate(self, newDate):
-        self.meetingDate=newDate
-        self.save()
+    def getWatchers(self, auth):
+        path = f"/rest/api/3/issue/{self.ticketID}/watchers"
+        queryObj = jiraQuery(auth, self.projectID.domain, path)
+        response = queryObj.send()
+        data = json.loads(response.text)["watchers"]
+        #print(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+        return [{k:i[k] for k in ["accountId", "displayName", "avatarUrls"]} for i in data]
 
 class PersonTickets(Base):
     ticketID = ForeignKeyField(JiraTicket, backref="allocations")
@@ -178,9 +191,15 @@ def db_reset():
     db.connect()
     # db.drop_tables([CompanyBuildings, Person, Project, JiraTicket, PersonTickets, MeetingRequest])
     db.create_tables([CompanyBuildings, Person, Project, JiraTicket, PersonTickets, MeetingRequest], safe=True)
-    db.close()
+    # db.close()
 
-# db_reset()
-new=MeetingRequest.makeRequest(1,dt.date.today(), dt.date.today(),True)
+if __name__ == "__main__":
+    me = apiUser("rohanmaloney@outlook.com", "lxZVdyemldyTFkmwM5Hn94BD")
+    auth = me.getAuth()
+    proj = Project.createProject("covidspace.atlassian.net", "COV")
 
-print(model_to_dict(new, recurse=False))
+    tick = JiraTicket.createTicket("COV-1", "COV")
+
+    print(tick.getWatchers(auth))
+
+    
