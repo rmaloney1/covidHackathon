@@ -144,7 +144,7 @@ class PersonTickets(Base):
         try:
             newAllocation = cls.create(
                 ticketID = ticketID,
-       =         person = person
+                person = person
             )
 
             return newAllocation

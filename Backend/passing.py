@@ -1,5 +1,3 @@
-ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCicW2v5P5JkE4czi8uGropxroBQ3wbCFzxA+n5yWRqr94RdM8WQghij4s/LsfVquw00DBNErYh40Rqj1srg9Yv4CjBXq9DcnfgE9iQeueOMjMaFe/4mSB4bgyLciPvKrXtUV15ALZ2F3FnzzRMdJ18+Amx4QBO7dzjiICYaMgGsrUvxv0fe/OeZffRChatYVptr/TymfpxGAdUvpVk36SjBE5+JcbMH6VH0IugzqGh3Z15x0kOTdMqbdykRY2pWFWwyHLar67bNGn/sSCvTYTlTFpTY1AJHcyqa5rxPlrSfyxrgpMGZDglXaK+w9NI1xrIkkUkk8GhCaWJjbQKMgDW6zw9XdMCnw+lNPQehciTx7djAmMwZGGHdNy1/yqmh7rRrQfEqDK5F/wDZ+EvpIgIO0vdZePmEiITbJA/wWA+7hsmO5e5iwRmGulO/WS6XycjAZSvmJy9xSmzD2tzIJRLkX+tHej+hhQjrknEePZt+a6q0MMC737MGP8IApEle8E= charlie@charlie-Aspire-A515-52flask restful
-
 from flask import Flask, request
 from flask_restful import Resource, Api, abort
 import json
@@ -11,13 +9,13 @@ app = Flask(__name__)
 api = Api(app)
 
 # data 
-with open("..json") as f:
-    data = json.load(f)
+# with open("..json") as f:
+#     data = json.load(f)
 
 class user(Resource):
     def post(self):
         # name and email
-        data = json.loads(requests.json)
+        data = json.loads(request.json)
         name = data["name"]
         email = data["email"]
         Person.createPerson(name, email)
@@ -55,7 +53,7 @@ class calendar(Resource):
 
         pass
 
-api.add_resource(user, '/user)
+api.add_resource(user, '/user')
 api.add_resource(tasks, '/tasks')
 api.add_resource(calendar, '/calendar')
 
