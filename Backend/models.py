@@ -4,7 +4,7 @@ from peewee import *  # pylint: disable=unused-wildcard-import
 import datetime as dt
 import json
 
-from jira import jiraQuery
+from jira import jiraQuery, apiUser
 
 if "HEROKU" in os.environ:
     url = urlparse(os.environ["DATABASE_URL"])
@@ -189,3 +189,14 @@ def db_reset():
     # db.drop_tables([CompanyBuildings, Person, Project, JiraTicket, PersonTickets, MeetingRequest])
     db.create_tables([CompanyBuildings, Person, Project, JiraTicket, PersonTickets, MeetingRequest], safe=True)
     # db.close()
+
+if __name__ == "__main__":
+    me = apiUser("rohanmaloney@outlook.com", "lxZVdyemldyTFkmwM5Hn94BD")
+    auth = me.getAuth()
+    proj = Project.createProject("covidspace.atlassian.net", "COV")
+
+    tick = JiraTicket.createTicket("COV-1", "COV")
+
+    print(tick.getWatchers(auth))
+
+    

@@ -94,16 +94,16 @@ class Issue(object):
         #print(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
         return [{k:i[k] for k in ["accountId", "displayName", "avatarUrls"]} for i in data]
 
-
-me = apiUser("rohanmaloney@outlook.com", "lxZVdyemldyTFkmwM5Hn94BD")
-auth = me.getAuth()
-test = Project("covidspace.atlassian.net", "COV")
-# print()
-keys = test.getIssueKeys(auth)
-print(keys)
-# print(test.getIssueKeys(auth))
-testIssue = test.getIssues(auth)[0]
-print()
-print(testIssue.getFields(['summary', 'id', 'assignee'], auth))
-print()
-print(json.dumps(testIssue.getWatchers(auth), indent=4, separators=(",", ": ")))
+if __name__ == "__main__":
+    me = apiUser("rohanmaloney@outlook.com", "lxZVdyemldyTFkmwM5Hn94BD")
+    auth = me.getAuth()
+    test = Project("covidspace.atlassian.net", "COV")
+    # print()
+    keys = test.getIssueKeys(auth)
+    print(keys)
+    # print(test.getIssueKeys(auth))
+    testIssue = test.getIssues(auth)[0]
+    print()
+    print(testIssue.getFields(['summary', 'id', 'assignee'], auth))
+    print()
+    print(json.dumps(testIssue.getWatchers(auth), indent=4, separators=(",", ": ")))
