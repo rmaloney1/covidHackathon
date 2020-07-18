@@ -12,7 +12,7 @@ from models import (
     apiUser,
     ourProject,
 )
-from processing import contactTrace
+from processing import contactTrace, makeAllocations
 
 me = apiUser("rohanmaloney@outlook.com", "lxZVdyemldyTFkmwM5Hn94BD")
 auth = me.getAuth()
@@ -53,6 +53,7 @@ class tasks(Resource):
         verbose = []
         for task in tasks:
             details = {}
+            details["id"] = task.ticketID
             details["name"] = task.name
             print("name of", task.ticketID, "is", task.name)
             details["status"] = "in person" if task.assigned else "unassigned"
@@ -88,6 +89,15 @@ class calendar(Resource):
             )
             .where(MeetingRequest.requestFilled == True)
         )
+        all_people = Person.select()
+        for person in all_people.iterator():
+            allocated_tickets = ( 
+                PersonTickets.select()
+                .join(
+                    MeetingRequest, on=(MeetingRequest.ticketID == PersonTickets.ticketID)
+                )
+                .where((MeetingRequest.requestFilled == True) & (PersonTickets.person == person.personID))
+            )
         for personTask in fullPersonTaskList.iterator():
             found = False
             taskSummary = {
@@ -114,11 +124,17 @@ class trace(Resource):
     def get(self, p_id):
         return contactTrace(p_id)
 
+class allocate(Resource):
+    def post(self):
+        makeAllocations()
+        return {}
+
 
 api.add_resource(user, "/user")
 api.add_resource(tasks, "/tasks")
 api.add_resource(calendar, "/calendar")
 api.add_resource(trace, "/trace/<string:p_id>")
+api.add_resource(allocate, "/allocate")
 
 if __name__ == "__main__":
     app.run(debug=True)
