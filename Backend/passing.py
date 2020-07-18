@@ -107,7 +107,7 @@ class calendar(Resource):
             mytasks = []
             for ticket in allocated_tickets:
                 mytasks.append({
-                    "name" : ticket.ticketID, 
+                    "name" : ticket.person, 
                     "day" : (ticket.dateAllocated).strftime("%m/%d/%Y"),
                     "attendees" : [
                         t.person
