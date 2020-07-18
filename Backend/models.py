@@ -31,6 +31,7 @@ else:
         or username == "tdcwr"
         or username == "tomhill"
         or username == "rohan"
+        or username == "tom"
     ):
         db = SqliteDatabase("test1.db")
     else:
@@ -295,7 +296,6 @@ except Exception as e:
     pass
 
 if __name__ == "__main__":
-
     me = apiUser("rohanmaloney@outlook.com", "lxZVdyemldyTFkmwM5Hn94BD")
     auth = me.getAuth()
 

@@ -88,7 +88,7 @@ def contactTrace(p_id):
     contacted = []
 
     # join personTickets to Requests as PersonTicketRequests
-    PersonMeetingRequest = MeetingRequest.select().join(PersonTickets).where(PersonTickets.person == p_id)
+    PersonMeetingRequest = MeetingRequest.select().join(PersonTickets,on=(MeetingRequest.ticketID==PersonTickets.ticketID)).where(PersonTickets.person == p_id)
     # for p_id in personTicketRequests
     for pmr in PersonMeetingRequest.iterator():
         # if dateallocated in last 2 weeks
