@@ -6,7 +6,9 @@ function CovidSpace({ Component, pageProps }) {
   return (
     <>
       <Nav />
-      <Component {...pageProps} />
+      <div className="container">
+        <Component {...pageProps} />
+      </div>
     </>
   );
 }
