@@ -20,7 +20,7 @@ if "HEROKU" in os.environ:
 else: 
     import getpass
     username = getpass.getuser()
-    if (username == "twright" or username == "tdcwr" or username == "tomhill" or username == "rohan"):
+    if (username == "twright" or username == "tdcwr" or username == "tomhill" or username == "rohan" or username == "tom"):
         db = SqliteDatabase('test1.db')
     else:
         from dotenv import load_dotenv # pylint: disable=import-error
@@ -260,7 +260,7 @@ except:
     pass
 
 if __name__ == "__main__":
-    #db_reset()
+    db_reset()
     me = apiUser("rohanmaloney@outlook.com", "lxZVdyemldyTFkmwM5Hn94BD")
     auth = me.getAuth()
 
