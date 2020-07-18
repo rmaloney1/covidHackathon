@@ -100,6 +100,8 @@ class Project(Base):
 class JiraTicket(Base):
     ticketID = CharField(primary_key=True)
     projectID = ForeignKeyField(Project, backref="tickets")
+    name = CharField()
+    assigned = BooleanField()
 
     @classmethod
     def createTicket(cls, ticketID, projectID):
@@ -139,7 +141,7 @@ class PersonTickets(Base):
         try:
             newAllocation = cls.create(
                 ticketID = ticketID,
-                person = person
+       =         person = person
             )
 
             return newAllocation
