@@ -1,4 +1,8 @@
 export default function signup() {
+  const handleSignUp = () => {
+    console.log("dosignup");
+  };
+
   return (
     <div className="columns is-centered">
       <div className="column is-4 box">
@@ -19,7 +23,9 @@ export default function signup() {
           <label className="label">Password</label>
           <input className="input" type="password" />
         </div>
-        <button className="button is-light is-success">Login</button>
+        <button className="button is-light is-success" onClick={handleSignUp}>
+          Signup
+        </button>
       </div>
     </div>
   );
