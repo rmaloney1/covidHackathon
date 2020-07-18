@@ -2,6 +2,9 @@ import os
 from urllib.parse import urlparse
 from peewee import *  # pylint: disable=unused-wildcard-import
 import datetime as dt
+import json
+
+from jira import jiraQuery
 
 if "HEROKU" in os.environ:
     url = urlparse(os.environ["DATABASE_URL"])
@@ -111,17 +114,30 @@ class Person(Base):
 
 class Project(Base):
     projectID = CharField(primary_key=True)
+    domain = CharField()
 
     @classmethod
-    def createProject(cls, projectID):
+    def createProject(cls, domain, projectID):
         try:
             newProject = cls.create(
-                projectID=projectID
+                projectID=projectID,
+                domain=domain
             )
 
             return newProject
         except IntegrityError:
             raise ValueError(f"Project Already Exists")
+    
+    def getIssueKeys(self, auth):
+        path = "/rest/api/3/search"
+        query = {
+            'jql': f'project = {self.projectID}',
+            'fields' : 'key',
+        }
+        queryObj = jiraQuery(auth, self.domain, path, query=query)
+        response = queryObj.send()
+        lis = [x["key"] for x in json.loads(response.text)["issues"]]
+        return lis
 
 class JiraTicket(Base):
     ticketID = CharField(primary_key=True)
