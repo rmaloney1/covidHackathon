@@ -721,3 +721,16 @@ def createData():
     PersonTickets.assignTickets("PAJ-66", "Harvie Betts")
     PersonTickets.assignTickets("PAJ-66", "Esmai Clark")
     PersonTickets.assignTickets("PAJ-66", "Isha Wilson")
+
+def makeRequestData():
+    new = MeetingRequest.makeRequest("PAJ-1", dt.date.today(), dt.date.today(), True)
+    new.allocateDate(dt.date.today()+dt.timedelta(days=2))
+    
+    new = MeetingRequest.makeRequest("PAJ-2", dt.date.today(), dt.date.today(), True)
+    new.allocateDate(dt.date.today()+dt.timedelta(days=3))
+    
+    new = MeetingRequest.makeRequest("PAJ-3", dt.date.today(), dt.date.today(), True)
+    new.allocateDate(dt.date.today()+dt.timedelta(days=4))
+
+    new = MeetingRequest.makeRequest("PAJ-4", dt.date.today(), dt.date.today(), True)
+    new.allocateDate(dt.date.today()+dt.timedelta(days=5))
