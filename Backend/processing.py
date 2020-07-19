@@ -26,6 +26,8 @@ def createSortedTaskList(priorityList = True):
     print(activeList.count())
 
     for request in activeList:
+        if (request.afterDate < dt.date.today()):
+            continue
         print("in request")
         # score is set by multiplying a time score (relative to end date closeness) to (the sum of its partcipants active task count)
         score = math.exp(-0.231049 * (request.beforeDate - dt.date.today()).days)
