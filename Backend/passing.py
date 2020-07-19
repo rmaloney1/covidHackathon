@@ -1,6 +1,7 @@
 from flask import Flask, request
 from flask_restful import Resource, Api, abort
 import json
+import datetime as dt
 from models import (
     CompanyBuildings,
     Person,
@@ -70,8 +71,8 @@ class tasks(Resource):
         data = request.json
         # print(f"DATAAAAAAAAAAAAAAAAAAAAAAAAAAA {data}")
         ticketID = data["ticketID"]
-        afterDate = data["afterDate"]
-        dueDate = data["dueDate"]
+        afterDate = dt.date.strptime(data["afterDate"], '%Y-%m-%dT%H:%M:%SZ')
+        dueDate = dt.date.strptime(data["dueDate"], '%Y-%m-%dT%H:%M:%SZ')
         priority = data["priority"]
         if priority == "high":
             priority = True
