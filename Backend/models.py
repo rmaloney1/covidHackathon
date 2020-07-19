@@ -294,6 +294,7 @@ def db_reset():
     # db.close()
 
 
+# db_reset()
 try:
     db_reset()
     ourProject = Project.createProject("covidspace.atlassian.net", "COV")
