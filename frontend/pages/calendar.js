@@ -60,13 +60,13 @@ export default function Calendar() {
       .then((res) => {
         console.log(res);
         const data = res.data;
-        data.forEach((p) => {
-          if (!p.meetings) {
-            p.meetings = [];
-          }
-        });
-        console.log(data);
-        setPeeps(data);
+        // data.forEach((p) => {
+        //   if (!p.meetings) {
+        //     p.meetings = [];
+        //   }
+        // });
+        // console.log(data);
+        // setPeeps(data);
       })
       .catch((err) => {
         console.error(err);

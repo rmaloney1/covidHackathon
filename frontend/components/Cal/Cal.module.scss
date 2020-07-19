@@ -9,4 +9,9 @@
   margin-top: 15px;
   text-align: center;
   cursor: pointer;
+  transition: all ease-in-out 0.2s;
+
+  &:hover {
+    transform: scale(1.25) rotate(8 + deg);
+  }
 }
