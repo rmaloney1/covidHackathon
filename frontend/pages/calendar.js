@@ -1,6 +1,7 @@
 import Cal from "../components/Cal/Cal";
 
 import { useContext, useState, useEffect } from "react";
+import { useToasts } from "react-toast-notifications";
 import UserContext from "../context/auth";
 import API from "../lib/api/api";
 
@@ -52,16 +53,36 @@ export default function Calendar() {
 
   const [peeps, setPeeps] = useState(peepsStart);
 
+  const { addToast } = useToasts();
+
   useEffect(() => {
     API.getCalendar()
       .then((res) => {
         console.log(res);
-        setPeeps(res.data);
+        const data = res.data;
+        data.forEach((p) => {
+          if (!p.meetings) {
+            p.meetings = [];
+          }
+        });
+        console.log(data);
+        setPeeps(data);
       })
       .catch((err) => {
         console.error(err);
       });
   }, []);
+
+  const handleAllocate = () => {
+    API.allocate().then((res) => {
+      console.log(res);
+      addToast("Allocated tasks", {
+        appearance: "success",
+        autoDismiss: true,
+        autoDismissTimeout: 2500,
+      });
+    });
+  };
 
   return (
     <>
@@ -76,6 +97,17 @@ export default function Calendar() {
           <Cal people={peeps} />
         </div>
       </div>
+      <center>
+        <button
+          className="button is-light is-warning has-text-centered"
+          onClick={() => handleAllocate()}
+        >
+          For Demo: Allocate Meetings
+        </button>
+      </center>
+      <br />
+      <br />
+      <br />
     </>
   );
 }

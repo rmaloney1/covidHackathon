@@ -2,6 +2,8 @@ import { useState } from "react";
 
 import { useToasts } from "react-toast-notifications";
 
+import Router from "next/router";
+
 import API from "../lib/api/api";
 
 export default function signup() {
@@ -19,6 +21,8 @@ export default function signup() {
           autoDismiss: true,
           autoDismissTimeout: 2500,
         });
+
+        Router.push("/calendar");
       })
       .catch((err) => {
         console.error(err);

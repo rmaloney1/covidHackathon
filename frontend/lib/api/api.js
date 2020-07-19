@@ -16,6 +16,8 @@ const API = {
   doTaskInPerson: (id, afterDate, dueDate, priority) =>
     api.post(`/tasks`, { ticketID: id, afterDate, dueDate, priority }),
   getCalendar: () => api.get("/calendar"),
+  allocate: () => api.post("/allocate"),
+  refreshJira: () => api.post("/refresh"),
 };
 
 export default API;
