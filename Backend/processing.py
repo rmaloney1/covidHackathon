@@ -17,30 +17,47 @@ SECRUTIY_BUFFER = 3
 UNSAFEDAYS = 14
 
 
-def createSortedTaskList(priorityList = True):
-    activeList = MeetingRequest.select().where(MeetingRequest.priority == priorityList & MeetingRequest.requestFilled == False)
+def createSortedTaskList(priorityList=True):
+    activeList = MeetingRequest.select().where(
+        MeetingRequest.priority == priorityList & MeetingRequest.requestFilled == False
+    )
     requestList = []
     scoreList = []
     personCount = []
 
     print(activeList.count())
 
-    for request in activeList:
-        if (request.afterDate < dt.date.today()):
+    for request in activeList.iterator():
+
+        print("afterDate:")
+        print(request.afterDate)
+        print("today:")
+        print(dt.date.today())
+
+        if request.afterDate_date < dt.date.today():
             continue
         print("in request")
         # score is set by multiplying a time score (relative to end date closeness) to (the sum of its partcipants active task count)
-        score = math.exp(-0.231049 * (request.beforeDate - dt.date.today()).days)
+        score = math.exp(-0.231049 * (request.beforeDate_date - dt.date.today()).days)
         personScore = 0
         personCounter = 0
         people = PersonTickets.select().where(
             PersonTickets.ticketID == request.ticketID
         )
         for person in people.iterator():
-            personScore += (MeetingRequest.select()
-                            .join(PersonTickets,on=(PersonTickets.ticketID == MeetingRequest.ticketID))
-                            .where(MeetingRequest.requestFilled == False & PersonTickets.person == person.person)
-                            .count())
+            personScore += (
+                MeetingRequest.select()
+                .join(
+                    PersonTickets,
+                    on=(PersonTickets.ticketID == MeetingRequest.ticketID),
+                )
+                .where(
+                    MeetingRequest.requestFilled
+                    == False & PersonTickets.person
+                    == person.person
+                )
+                .count()
+            )
             personCounter += 1
 
         score *= personScore
@@ -49,12 +66,17 @@ def createSortedTaskList(priorityList = True):
         scoreList.append(score)
         personCount.append(personCounter)
 
-    combinedList = [(requestList[i], scoreList[i], personCount[i]) for i in range(len(requestList))]
+    combinedList = [
+        (requestList[i], scoreList[i], personCount[i]) for i in range(len(requestList))
+    ]
     combinedList.sort(key=(lambda x: x[1]))
     # sortedRequests = [x for _, x in sorted(zip(scoreList, requestList))]
     # sortedCount = [x for _, x in sorted(zip(scoreList, personCount))]
 
-    return {"requests": [i[0] for i in combinedList], "personCount": [i[2] for i in combinedList]}
+    return {
+        "requests": [i[0] for i in combinedList],
+        "personCount": [i[2] for i in combinedList],
+    }
 
 
 # TODO: improve this so there are more people doing the same task in a day
@@ -83,14 +105,20 @@ def makeAllocations():
     # for each task calculate a score
     lowPrioritySortedList = createSortedTaskList(False)
     i = 0
-    while currentAllocatedPersonCount <= capacity and i < len(lowPrioritySortedList["requests"]):
-        if ((capacity - currentAllocatedPersonCount) >= lowPrioritySortedList["personCount"][i]):
+    while currentAllocatedPersonCount <= capacity and i < len(
+        lowPrioritySortedList["requests"]
+    ):
+        if (capacity - currentAllocatedPersonCount) >= lowPrioritySortedList[
+            "personCount"
+        ][i]:
             lowPrioritySortedList["requests"][i].allocateDate(allocationDate)
             currentAllocatedPersonCount += lowPrioritySortedList["personCount"][i]
 
         i += 1
 
     print("allocate finish ---------------")
+
+
 # contact tracing
 # takes a personID
 # ID is the name
@@ -99,7 +127,11 @@ def contactTrace(p_id):
     contacted = []
 
     # join personTickets to Requests as PersonTicketRequests
-    PersonMeetingRequest = MeetingRequest.select().join(PersonTickets,on=(MeetingRequest.ticketID==PersonTickets.ticketID)).where(PersonTickets.person == p_id)
+    PersonMeetingRequest = (
+        MeetingRequest.select()
+        .join(PersonTickets, on=(MeetingRequest.ticketID == PersonTickets.ticketID))
+        .where(PersonTickets.person == p_id)
+    )
     # for p_id in personTicketRequests
     for pmr in PersonMeetingRequest.iterator():
         # if dateallocated in last 2 weeks
