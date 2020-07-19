@@ -1,4 +1,10 @@
+import Router from "next/router";
+
 export default function login() {
+  const handleLogin = () => {
+    Router.push("/calendar");
+  };
+
   return (
     <div className="columns is-centered">
       <div className="column is-4 box">
@@ -11,7 +17,12 @@ export default function login() {
           <label className="label">Password</label>
           <input className="input" type="password" />
         </div>
-        <button className="button is-light is-success">Login</button>
+        <button
+          className="button is-light is-success"
+          onClick={() => handleLogin()}
+        >
+          Login
+        </button>
       </div>
     </div>
   );

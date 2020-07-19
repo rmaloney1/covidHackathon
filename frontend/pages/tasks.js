@@ -8,6 +8,7 @@ import API from "../lib/api/api";
 
 export default function Tasks() {
   const [loading, setLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [tasks, updateTasks] = useState([
     { name: "task1", status: "none", attendees: ["Tom Hill", "Tom Wright"] },
     { name: "yeet", status: "none", attendees: ["Tom Hill", "Tom Wright"] },
@@ -33,6 +34,19 @@ export default function Tasks() {
 
   const handleRemoteClick = (task) => {
     // never used atm
+  };
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    API.refreshJira()
+      .then((res) => {
+        console.log(res);
+        setIsRefreshing(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setIsRefreshing(false);
+      });
   };
 
   const handleInPersonClick = (task) => {
@@ -88,6 +102,16 @@ export default function Tasks() {
             </div>
           ))}{" "}
       </div>{" "}
+      <center>
+        <button
+          className={`button is-light is-warning ${
+            isRefreshing ? "is-loading" : null
+          }`}
+          onClick={() => handleRefresh()}
+        >
+          For Demo: refresh jira
+        </button>
+      </center>
     </div>
   );
 }

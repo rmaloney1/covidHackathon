@@ -81,10 +81,12 @@ class tasks(Resource):
         MeetingRequest.makeRequest(ticketID, afterDate, dueDate, priority)
         return {}
 
+
 class refresh(Resource):
     def post(self):
         ourProject.refreshTickets(auth)
         return {}
+
 
 class calendar(Resource):
     def get(self):
@@ -99,28 +101,32 @@ class calendar(Resource):
         # )
         all_people = Person.select()
         for person in all_people.iterator():
-            allocated_tickets = ( 
+            allocated_tickets = (
                 JiraTicket.select()
-                .join(
-                    PersonTickets, on=(JiraTicket.ticketID == PersonTickets.ticketID)
-                )
+                .join(PersonTickets, on=(JiraTicket.ticketID == PersonTickets.ticketID))
                 .join(
                     MeetingRequest, on=(MeetingRequest.ticketID == JiraTicket.ticketID)
                 )
-                .where((MeetingRequest.requestFilled == True) & (PersonTickets.person == person.personID))
+                .where(
+                    (MeetingRequest.requestFilled == True)
+                    & (PersonTickets.person == person.personID)
+                )
             )
             mytasks = []
             for ticket in allocated_tickets:
-                mytasks.append({
-                    "name" : ticket.person, 
-                    "day" : (ticket.dateAllocated).strftime("%m/%d/%Y"),
-                    "attendees" : [
-                        t.person
-                        for t in PersonTickets.select().where(
-                            PersonTickets.ticketID == ticket.ticketID
-                        )
-                    ]})
-            output.append({person.personID : mytasks})
+                mytasks.append(
+                    {
+                        "name": ticket.summary,
+                        "day": (ticket.dateAllocated).strftime("%m/%d/%Y"),
+                        "attendees": [
+                            t.person
+                            for t in PersonTickets.select().where(
+                                PersonTickets.ticketID == ticket.ticketID
+                            )
+                        ],
+                    }
+                )
+            output.append({"name": person.personID, "meetings": mytasks})
         # for personTask in fullPersonTaskList.iterator():
         #     found = False
         #     taskSummary = {
@@ -146,6 +152,7 @@ class calendar(Resource):
 class trace(Resource):
     def get(self, p_id):
         return contactTrace(p_id)
+
 
 class allocate(Resource):
     def post(self):
