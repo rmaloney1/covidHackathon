@@ -18,21 +18,27 @@ UNSAFEDAYS = 14
 
 
 def createSortedTaskList(priorityList = True):
-    activeList = MeetingRequest.select().where(MeetingRequest.priority == priorityList & MeetingRequest.requestFilled == False & MeetingRequest.beforeDate >= dt.date.today())
+    activeList = MeetingRequest.select().where(MeetingRequest.priority == priorityList & MeetingRequest.requestFilled == False)
     requestList = []
     scoreList = []
     personCount = []
 
-    for request in activeList.iterator():
+    print(activeList.count())
+
+    for request in activeList:
+        print("in request")
         # score is set by multiplying a time score (relative to end date closeness) to (the sum of its partcipants active task count)
-        score = math.exp(-0.231049 * request.beforeDate)
+        score = math.exp(-0.231049 * (request.beforeDate - dt.date.today()).days)
         personScore = 0
         personCounter = 0
         people = PersonTickets.select().where(
             PersonTickets.ticketID == request.ticketID
         )
         for person in people.iterator():
-            personScore += person.activeTicketCount
+            personScore += (MeetingRequest.select()
+                            .join(PersonTickets,on=(PersonTickets.ticketID == MeetingRequest.ticketID))
+                            .where(MeetingRequest.requestFilled == False & PersonTickets.person == person.person)
+                            .count())
             personCounter += 1
 
         score *= personScore
@@ -41,14 +47,17 @@ def createSortedTaskList(priorityList = True):
         scoreList.append(score)
         personCount.append(personCounter)
 
-    sortedRequests = [x for _, x in sorted(zip(scoreList, requestList))]
-    sortedCount = [x for _, x in sorted(zip(scoreList, personCount))]
+    combinedList = [(requestList[i], scoreList[i], personCount[i]) for i in range(len(requestList))]
+    combinedList.sort(key=(lambda x: x[1]))
+    # sortedRequests = [x for _, x in sorted(zip(scoreList, requestList))]
+    # sortedCount = [x for _, x in sorted(zip(scoreList, personCount))]
 
-    return {"requests": sortedRequests, "personCount": sortedCount}
+    return {"requests": [i[0] for i in combinedList], "personCount": [i[2] for i in combinedList]}
 
 
 # TODO: improve this so there are more people doing the same task in a day
 def makeAllocations():
+    print("--------- make is called")
     # for each task calculate a score
     sortedList = createSortedTaskList(True)
 
@@ -61,7 +70,7 @@ def makeAllocations():
         allocationDate += dt.timedelta(days=2)
 
     # if there are gaps that are too small for important tasks, fill down particpant count
-    i = 0    
+    i = 0
     while currentAllocatedPersonCount <= capacity and i < len(sortedList["requests"]):
         if (capacity - currentAllocatedPersonCount) >= sortedList["personCount"][i]:
             sortedList["requests"][i].allocateDate(allocationDate)
@@ -79,7 +88,7 @@ def makeAllocations():
 
         i += 1
 
-
+    print("allocate finish ---------------")
 # contact tracing
 # takes a personID
 # ID is the name

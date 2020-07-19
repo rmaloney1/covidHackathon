@@ -68,6 +68,7 @@ class tasks(Resource):
     def post(self):
         # name and email
         data = request.json
+        # print(f"DATAAAAAAAAAAAAAAAAAAAAAAAAAAA {data}")
         ticketID = data["ticketID"]
         afterDate = data["afterDate"]
         dueDate = data["dueDate"]
