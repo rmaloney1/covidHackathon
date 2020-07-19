@@ -1,7 +1,16 @@
 import Router from "next/router";
 
+import { useToasts } from "react-toast-notifications";
+
 export default function login() {
+  const { addToast } = useToasts();
+
   const handleLogin = () => {
+    addToast("logged in!", {
+      appearance: "success",
+      autoDismiss: true,
+      autoDismissTimeout: 2500,
+    });
     Router.push("/calendar");
   };
 

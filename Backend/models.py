@@ -84,7 +84,8 @@ class Person(Base):
 
     def activeTicketCount(self):
         return (
-            PersonTickets.select().join(Person,on=PersonTickets.person == self.personID)
+            PersonTickets.select()
+            .join(Person, on=PersonTickets.person == self.personID)
             .where(PersonTickets.ticketID.requestFilled == False)
             .count()
         )
@@ -232,6 +233,14 @@ class MeetingRequest(Base):
             raise ValueError(f"Ticket Assign Already Exists")
 
     @property
+    def afterDate_date(self):
+        return dt.datetime.strptime(str(self.afterDate), "%Y-%m-%d").date()
+
+    @property
+    def beforeDate_date(self):
+        return dt.datetime.strptime(str(self.beforeDate), "%Y-%m-%d").date()
+
+    @property
     def priority(self):
         return self.highPriority
 
@@ -254,7 +263,9 @@ class MeetingRequest(Base):
 
     @property
     def isActive(self):
-        if (self.beforeDate - dt.date.today()).days <= 0 and not self.requestFilled:
+        if (
+            self.beforeDate_date - dt.date.today()
+        ).days <= 0 and not self.requestFilled:
             return True
         else:
             return False
@@ -283,6 +294,7 @@ def db_reset():
     # db.close()
 
 
+# db_reset()
 try:
     db_reset()
     ourProject = Project.createProject("covidspace.atlassian.net", "COV")
@@ -295,7 +307,7 @@ qry = CompanyBuildings.select()
 if not qry.exists():
     CompanyBuildings.createRoom("devonshire", "DEV", 10)
 if __name__ == "__main__":
-    
+
     me = apiUser("rohanmaloney@outlook.com", "lxZVdyemldyTFkmwM5Hn94BD")
     auth = me.getAuth()
 
@@ -312,7 +324,7 @@ if __name__ == "__main__":
 
 
 def createData():
-    CompanyBuildings.createRoom("Building A", "Building A", 10)
+    CompanyBuildings.createRoom("Building A", "Building A", 6)
 
     Person.createPerson("Bessie Oakley", "Email1@gmail.com")
     Person.createPerson("Aaron Bryant", "Email2@gmail.com")

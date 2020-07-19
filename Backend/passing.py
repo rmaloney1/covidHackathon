@@ -71,8 +71,12 @@ class tasks(Resource):
         data = request.json
         # print(f"DATAAAAAAAAAAAAAAAAAAAAAAAAAAA {data}")
         ticketID = data["ticketID"]
-        afterDate = dt.date.strptime(data["afterDate"], '%Y-%m-%dT%H:%M:%SZ')
-        dueDate = dt.date.strptime(data["dueDate"], '%Y-%m-%dT%H:%M:%SZ')
+        afterDate = dt.datetime.strptime(
+            data["afterDate"], "%Y-%m-%dT%H:%M:%S.%fZ"
+        ).date()
+        dueDate = dt.datetime.strptime(data["dueDate"], "%Y-%m-%dT%H:%M:%S.%fZ").date()
+        print(afterDate)
+        print(type(afterDate))
         priority = data["priority"]
         if priority == "high":
             priority = True
@@ -113,14 +117,44 @@ class calendar(Resource):
                     & (PersonTickets.person == person.personID)
                 )
             )
+            print(list(allocated_tickets))
             mytasks = []
+
+            weekDays = (
+                "monday",
+                "tuesday",
+                "wednesday",
+                "thursday",
+                "friday",
+                "saturday",
+                "sunday",
+            )
+
             for ticket in allocated_tickets:
+                print(type(ticket))
+                # print(
+                #     MeetingRequest.select()
+                #             .where(MeetingRequest.ticketID == ticket.ticketID)
+                #             .get()
+                #             .dateAllocated
+                #         ).strftime("%m/%d/%Y")
+                #         )
                 mytasks.append(
                     {
-                        "name": ticket.summary,
-                        "day": (ticket.dateAllocated).strftime("%m/%d/%Y"),
+                        "name": ticket.name,
+                        # "day": (ticket.switch(MeetingRequest).dateAllocated).strftime(
+                        #     "%m/%d/%Y"
+                        # ),
+                        "day": weekDays[
+                            (
+                                MeetingRequest.select()
+                                .where(MeetingRequest.ticketID == ticket.ticketID)
+                                .get()
+                                .dateAllocated
+                            ).weekday()
+                        ],
                         "attendees": [
-                            t.person
+                            t.person.personID
                             for t in PersonTickets.select().where(
                                 PersonTickets.ticketID == ticket.ticketID
                             )

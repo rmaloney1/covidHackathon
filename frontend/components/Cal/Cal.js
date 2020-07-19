@@ -22,7 +22,7 @@ function Bar(props) {
             <div className="box has-text-centered">
               <h3 className="title is-3">
                 {props.tasks.length} meeting{props.tasks.length == 1 ? "" : "s"}{" "}
-                on [DATE]
+                on {props.day}
               </h3>
               {props.tasks.map((t, idx) => (
                 <div className="box" key={idx}>
@@ -69,7 +69,10 @@ export default function Cal(props) {
               (day, idx) => (
                 <td key={idx}>
                   {person.meetings.filter((m) => m.day == day).length > 0 ? (
-                    <Bar tasks={person.meetings.filter((m) => m.day == day)} />
+                    <Bar
+                      tasks={person.meetings.filter((m) => m.day == day)}
+                      day={day}
+                    />
                   ) : null}
                 </td>
               )
