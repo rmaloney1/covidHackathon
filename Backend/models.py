@@ -82,11 +82,9 @@ class Person(Base):
         except IntegrityError:
             raise ValueError(f"Person Already Exists")
 
-    @property
     def activeTicketCount(self):
         return (
-            Person.select()
-            .join(PersonTickets)
+            PersonTickets.select().join(Person,on=PersonTickets.person == self.personID)
             .where(PersonTickets.ticketID.requestFilled == False)
             .count()
         )
